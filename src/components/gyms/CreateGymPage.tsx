@@ -17,7 +17,6 @@ import {
   Copy,
   Upload,
   ShieldCheck,
-  Compass,
   MapPin,
   Phone,
   FileText,
@@ -26,6 +25,7 @@ import {
 import type { IOpeningHour, CreateGymPayload } from '../../types';
 import { gymService } from '../../api/gymService';
 import { useAuth } from '../../context/AuthContext';
+import { LocationPickerMap } from '../common/LocationPickerMap';
 
 const POPULAR_FACILITIES = [
   'Cardio Equipment',
@@ -717,36 +717,26 @@ export function CreateGymPage() {
               </div>
             </div>
 
-            {/* GPS Coordinates */}
+            {/* Geographic Location (Map Picker) */}
             <div className="pt-2 border-t border-slate-100">
-              <label className="block text-xs font-bold text-slate-900 mb-2 flex items-center space-x-1.5">
-                <Compass className="h-4 w-4 text-[#00A389]" />
-                <span>Geographic Location (Map Coordinates)</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-600">Latitude</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    placeholder="12.9716"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-600">Longitude</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    placeholder="77.5946"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
-                  />
-                </div>
-              </div>
+              <LocationPickerMap
+                latitude={latitude}
+                longitude={longitude}
+                address={address}
+                city={city}
+                label="Geographic Location (Select on Google Map)"
+                helperText="Click anywhere on the map or drag the pin to set your exact gym location for customers."
+                onLocationChange={({ latitude: newLat, longitude: newLng, address: newAddr, city: newCity }) => {
+                  setLatitude(newLat);
+                  setLongitude(newLng);
+                  if (newAddr && (!address || address.trim() === '')) {
+                    setAddress(newAddr);
+                  }
+                  if (newCity && (!city || city.trim() === '')) {
+                    setCity(newCity);
+                  }
+                }}
+              />
             </div>
 
             {/* Description */}

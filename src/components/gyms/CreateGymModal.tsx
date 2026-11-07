@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { gymService } from '../../api/gymService';
 import type { GymItem } from '../../types';
+import { LocationPickerMap } from '../common/LocationPickerMap';
 
 interface CreateGymModalProps {
   isOpen: boolean;
@@ -280,8 +281,8 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div className="sm:col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
                 <label className="text-xs font-semibold text-slate-700 block mb-1">
                   Full Street Address *
                 </label>
@@ -311,30 +312,28 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#00C49F] focus:bg-white transition-all"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
-                  Latitude / Longitude
-                </label>
-                <div className="flex space-x-1">
-                  <input
-                    type="text"
-                    value={latitude}
-                    onChange={(e) => setLatitude(e.target.value)}
-                    placeholder="12.9716"
-                    className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2.5 text-[11px]"
-                    title="Latitude"
-                  />
-                  <input
-                    type="text"
-                    value={longitude}
-                    onChange={(e) => setLongitude(e.target.value)}
-                    placeholder="77.5946"
-                    className="w-1/2 bg-slate-50 border border-slate-200 rounded-lg px-2 py-2.5 text-[11px]"
-                    title="Longitude"
-                  />
-                </div>
-              </div>
+            {/* Map Location Picker */}
+            <div className="pt-2">
+              <LocationPickerMap
+                latitude={latitude}
+                longitude={longitude}
+                address={address}
+                city={city}
+                label="Gym Location (Google Map)"
+                helperText="Select or drag the pin to set the exact gym location."
+                onLocationChange={({ latitude: newLat, longitude: newLng, address: newAddr, city: newCity }) => {
+                  setLatitude(newLat);
+                  setLongitude(newLng);
+                  if (newAddr && (!address || address.trim() === '')) {
+                    setAddress(newAddr);
+                  }
+                  if (newCity && (!city || city.trim() === '')) {
+                    setCity(newCity);
+                  }
+                }}
+              />
             </div>
           </div>
 
