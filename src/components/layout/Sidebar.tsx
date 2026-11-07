@@ -158,13 +158,9 @@ export function Sidebar({ activeTab, isSidebarOpen, onSelectTab, onClose }: Side
       </aside>
 
       {/* ============================================================== */}
-      {/* DESKTOP SIDEBAR (>= lg)                                        */}
+      {/* DESKTOP SIDEBAR (>= lg) - Always Fixed Full Width             */}
       {/* ============================================================== */}
-      <aside
-        className={`hidden lg:flex bg-[#060E1E] text-white flex-col justify-between transition-all duration-300 z-30 ${
-          isSidebarOpen ? 'w-64' : 'w-20'
-        } shrink-0 border-r border-slate-800/60 shadow-xl`}
-      >
+      <aside className="hidden lg:flex w-64 bg-[#060E1E] text-white flex-col justify-between shrink-0 border-r border-slate-800/60 shadow-xl z-30">
         <div>
           {/* Brand Logo Section */}
           <div
@@ -177,17 +173,15 @@ export function Sidebar({ activeTab, isSidebarOpen, onSelectTab, onClose }: Side
             <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] flex items-center justify-center shadow-md shadow-[#00C49F]/20 shrink-0">
               <Dumbbell className="h-5 w-5 text-white stroke-[2.5]" />
             </div>
-            {isSidebarOpen && (
-              <div>
-                <div className="flex items-center space-x-1">
-                  <span className="text-xl font-black tracking-wide text-white">GYM</span>
-                  <span className="text-xl font-black tracking-wide text-[#00C49F]">ON</span>
-                </div>
-                <p className="text-[9px] font-bold tracking-[0.2em] text-[#00C49F] uppercase -mt-1">
-                  PROVIDER PORTAL
-                </p>
+            <div>
+              <div className="flex items-center space-x-1">
+                <span className="text-xl font-black tracking-wide text-white">GYM</span>
+                <span className="text-xl font-black tracking-wide text-[#00C49F]">ON</span>
               </div>
-            )}
+              <p className="text-[9px] font-bold tracking-[0.2em] text-[#00C49F] uppercase -mt-1">
+                PROVIDER PORTAL
+              </p>
+            </div>
           </div>
 
           {/* Navigation Menu */}
@@ -212,9 +206,7 @@ export function Sidebar({ activeTab, isSidebarOpen, onSelectTab, onClose }: Side
                       isActive ? 'text-white' : 'text-slate-400'
                     }`}
                   />
-                  {isSidebarOpen && (
-                    <span className="truncate">{item.name}</span>
-                  )}
+                  <span className="truncate">{item.name}</span>
                 </button>
               );
             })}
