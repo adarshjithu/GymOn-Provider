@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   X,
   Building2,
@@ -48,9 +48,9 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
   const [phoneNumber, setPhoneNumber] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
-  const [dayPassPrice, setDayPassPrice] = useState('150');
-  const [monthlyPrice, setMonthlyPrice] = useState('1499');
-  const [threeMonthPrice, setThreeMonthPrice] = useState('3999');
+  const [dayPassPrice, setDayPassPrice] = useState('');
+  const [monthlyPrice, setMonthlyPrice] = useState('');
+  const [threeMonthPrice, setThreeMonthPrice] = useState('');
   const [latitude, setLatitude] = useState('12.9716');
   const [longitude, setLongitude] = useState('77.5946');
   const [description, setDescription] = useState('');
@@ -67,6 +67,54 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Average Price Suggestions State
+  const [avgPrices, setAvgPrices] = useState<{
+    dayPass: number;
+    monthly: number;
+    threeMonth: number;
+    count: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+
+    gymService
+      .getProviderGyms()
+      .then((gyms) => {
+        if (!isMounted || !Array.isArray(gyms) || gyms.length === 0) return;
+
+        const dayPasses = gyms.map((g) => Number(g.dayPassPrice)).filter((p) => !isNaN(p) && p > 0);
+        const monthlies = gyms.map((g) => Number(g.monthlyMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
+        const threeMonths = gyms.map((g) => Number(g.threeMonthMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
+
+        const avgDP = dayPasses.length > 0 ? Math.round(dayPasses.reduce((a, b) => a + b, 0) / dayPasses.length) : 25;
+        const avgM = monthlies.length > 0 ? Math.round(monthlies.reduce((a, b) => a + b, 0) / monthlies.length) : 80;
+        const avgTM = threeMonths.length > 0 ? Math.round(threeMonths.reduce((a, b) => a + b, 0) / threeMonths.length) : 220;
+
+        setAvgPrices({
+          dayPass: avgDP,
+          monthly: avgM,
+          threeMonth: avgTM,
+          count: gyms.length,
+        });
+      })
+      .catch((err) => {
+        console.error('Failed to load existing gyms for price averages:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  const handleApplyAllAverages = () => {
+    if (!avgPrices) return;
+    setDayPassPrice(String(avgPrices.dayPass));
+    setMonthlyPrice(String(avgPrices.monthly));
+    setThreeMonthPrice(String(avgPrices.threeMonth));
+  };
 
   if (!isOpen) return null;
 
@@ -292,14 +340,38 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
 
           {/* Pricing Section */}
           <div className="space-y-4 pt-2 border-t border-slate-100">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-              2. Membership & Pass Pricing
-            </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                2. Membership & Pass Pricing
+              </h4>
+              {avgPrices && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
+                    Avg of {avgPrices.count} gym{avgPrices.count > 1 ? 's' : ''}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleApplyAllAverages}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-[#00A389] text-[10px] font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+                    title="Apply average prices for all plans"
+                  >
+                    <Sparkles className="h-3 w-3 text-[#00A389]" />
+                    <span>Apply All Averages</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-emerald-50/40 border border-emerald-100/80 rounded-xl p-3">
-                <label className="text-xs font-bold text-slate-800 block mb-1">
-                  1-Day Pass (₹) *
-                </label>
+              <div className="bg-emerald-50/40 border border-emerald-100/80 rounded-xl p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800">
+                    1-Day Pass (₹) *
+                  </label>
+                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-100/60 px-1.5 py-0.5 rounded">
+                    Required
+                  </span>
+                </div>
                 <div className="relative">
                   <span className="text-slate-400 font-bold text-xs absolute left-3 top-1/2 -translate-y-1/2">₹</span>
                   <input
@@ -308,16 +380,42 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
                     min="0"
                     value={dayPassPrice}
                     onChange={(e) => setDayPassPrice(e.target.value)}
-                    placeholder="150"
+                    placeholder={avgPrices ? `e.g. ${avgPrices.dayPass}` : '150'}
                     className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
+                {avgPrices && (
+                  <div className="flex justify-end pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setDayPassPrice(String(avgPrices.dayPass))}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        dayPassPrice !== '' && Number(dayPassPrice) === avgPrices.dayPass
+                          ? 'bg-emerald-100/80 text-emerald-800'
+                          : 'bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200/80 active:scale-95'
+                      }`}
+                      title="Click to apply suggested average"
+                    >
+                      <Sparkles className="h-2.5 w-2.5 text-[#00A389]" />
+                      <span>
+                        {dayPassPrice !== '' && Number(dayPassPrice) === avgPrices.dayPass
+                          ? `Avg: ₹${avgPrices.dayPass} ✓`
+                          : `Suggest: ₹${avgPrices.dayPass}`}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  Monthly Pass (₹)
-                </label>
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">
+                    Monthly Pass (₹)
+                  </label>
+                  <span className="text-[9px] font-medium text-slate-400">
+                    Monthly
+                  </span>
+                </div>
                 <div className="relative">
                   <span className="text-slate-400 font-bold text-xs absolute left-3 top-1/2 -translate-y-1/2">₹</span>
                   <input
@@ -325,16 +423,42 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
                     min="0"
                     value={monthlyPrice}
                     onChange={(e) => setMonthlyPrice(e.target.value)}
-                    placeholder="1499"
+                    placeholder={avgPrices ? `e.g. ${avgPrices.monthly}` : '1499'}
                     className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#00C49F]"
                   />
                 </div>
+                {avgPrices && (
+                  <div className="flex justify-end pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setMonthlyPrice(String(avgPrices.monthly))}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        monthlyPrice !== '' && Number(monthlyPrice) === avgPrices.monthly
+                          ? 'bg-emerald-100/80 text-emerald-800'
+                          : 'bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200/80 active:scale-95'
+                      }`}
+                      title="Click to apply suggested average"
+                    >
+                      <Sparkles className="h-2.5 w-2.5 text-[#00A389]" />
+                      <span>
+                        {monthlyPrice !== '' && Number(monthlyPrice) === avgPrices.monthly
+                          ? `Avg: ₹${avgPrices.monthly} ✓`
+                          : `Suggest: ₹${avgPrices.monthly}`}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3">
-                <label className="text-xs font-bold text-slate-700 block mb-1">
-                  3-Month Pass (₹)
-                </label>
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-700">
+                    3-Month Pass (₹)
+                  </label>
+                  <span className="text-[9px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded">
+                    Quarterly
+                  </span>
+                </div>
                 <div className="relative">
                   <span className="text-slate-400 font-bold text-xs absolute left-3 top-1/2 -translate-y-1/2">₹</span>
                   <input
@@ -342,10 +466,31 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
                     min="0"
                     value={threeMonthPrice}
                     onChange={(e) => setThreeMonthPrice(e.target.value)}
-                    placeholder="3999"
+                    placeholder={avgPrices ? `e.g. ${avgPrices.threeMonth}` : '3999'}
                     className="w-full bg-white border border-slate-200 rounded-lg pl-7 pr-3 py-2 text-xs font-bold text-slate-800 focus:outline-none focus:border-[#00C49F]"
                   />
                 </div>
+                {avgPrices && (
+                  <div className="flex justify-end pt-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setThreeMonthPrice(String(avgPrices.threeMonth))}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                        threeMonthPrice !== '' && Number(threeMonthPrice) === avgPrices.threeMonth
+                          ? 'bg-emerald-100/80 text-emerald-800'
+                          : 'bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200/80 active:scale-95'
+                      }`}
+                      title="Click to apply suggested average"
+                    >
+                      <Sparkles className="h-2.5 w-2.5 text-[#00A389]" />
+                      <span>
+                        {threeMonthPrice !== '' && Number(threeMonthPrice) === avgPrices.threeMonth
+                          ? `Avg: ₹${avgPrices.threeMonth} ✓`
+                          : `Suggest: ₹${avgPrices.threeMonth}`}
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
