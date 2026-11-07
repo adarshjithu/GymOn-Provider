@@ -112,10 +112,10 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
   return (
     <div className="space-y-6">
       {/* 1. TOP NAVIGATION & HEADER ACTION BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <button
           onClick={handleBack}
-          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
+          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group self-start"
         >
           <div className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:bg-slate-100 transition-colors">
             <ArrowLeft className="h-4 w-4" />
@@ -123,10 +123,10 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
           <span>Back to My Gyms</span>
         </button>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <button
             onClick={() => handleViewLeads(gym.slug)}
-            className="px-4 py-2 bg-teal-50 border border-teal-200 hover:bg-teal-100 text-[#00A389] text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 bg-teal-50 border border-teal-200 hover:bg-teal-100 text-[#00A389] text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <span>View Customer Leads</span>
           </button>
@@ -136,7 +136,7 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
               if (onEdit) onEdit(gym);
               else navigate(`/gyms/${gym.slug}/edit`);
             }}
-            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            className="flex-1 sm:flex-initial px-3.5 sm:px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <Pencil className="h-3.5 w-3.5 text-slate-500" />
             <span>Edit Gym</span>
@@ -144,7 +144,7 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
 
           <button
             onClick={handleCopyPublicLink}
-            className="px-4 py-2 bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2 bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
             title="Copy Public Listing Link"
           >
             <span>{copiedLink ? 'Link Copied!' : 'Copy Public Link'}</span>
@@ -154,19 +154,19 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
       </div>
 
       {/* 2. GYM MAIN INFO HERO BANNER */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-2xl bg-[#060E1E] border border-slate-800 text-[#00C49F] flex items-center justify-center font-black text-xl shadow-md shrink-0">
-            <Dumbbell className="h-8 w-8 text-[#00C49F]" />
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center space-x-3.5 sm:space-x-4 min-w-0">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-[#060E1E] border border-slate-800 text-[#00C49F] flex items-center justify-center font-black text-xl shadow-md shrink-0">
+            <Dumbbell className="h-7 w-7 sm:h-8 sm:w-8 text-[#00C49F]" />
           </div>
 
-          <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2.5 sm:space-x-3">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
                 {gym.gymName}
               </h1>
               <span
-                className={`px-3 py-0.5 rounded-full text-[11px] font-bold ${isLive
+                className={`px-2.5 sm:px-3 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold shrink-0 ${isLive
                     ? 'bg-[#E6F9F2] text-[#00A389] border border-[#00A389]/20'
                     : 'bg-[#FEF6E7] text-[#D97706] border border-amber-300'
                   }`}
@@ -175,13 +175,13 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium mt-1">
-              <span className="flex items-center">
-                <MapPin className="h-3.5 w-3.5 text-slate-400 mr-1" />
-                {gym.city || gym.address}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-500 font-medium mt-1">
+              <span className="flex items-center truncate">
+                <MapPin className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
+                <span className="truncate">{gym.city || gym.address}</span>
               </span>
               <span>&bull;</span>
-              <span className="font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+              <span className="font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded text-[10px] sm:text-[11px] truncate">
                 slug: {gym.slug}
               </span>
             </div>
@@ -189,31 +189,31 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
         </div>
 
         {/* Pricing Quick Display */}
-        <div className="flex items-center space-x-6 border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 w-full md:w-auto justify-between md:justify-end">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 border-t md:border-t-0 md:border-l border-slate-200/80 pt-3.5 sm:pt-4 md:pt-0 md:pl-6 w-full md:w-auto justify-between md:justify-end">
           <div>
-            <p className="text-[11px] font-semibold text-slate-400 uppercase">Day Pass</p>
-            <p className="text-xl font-black text-slate-900">
+            <p className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase">Day Pass</p>
+            <p className="text-lg sm:text-xl font-black text-slate-900">
               {gym.dayPassPrice > 0 ? `₹${gym.dayPassPrice}` : 'Unpriced'}
             </p>
           </div>
           {gym.monthlyMembershipPrice ? (
             <div>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase">Monthly</p>
-              <p className="text-xl font-black text-slate-900">₹{gym.monthlyMembershipPrice}</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase">Monthly</p>
+              <p className="text-lg sm:text-xl font-black text-slate-900">₹{gym.monthlyMembershipPrice}</p>
             </div>
           ) : null}
           {gym.threeMonthMembershipPrice ? (
             <div>
-              <p className="text-[11px] font-semibold text-slate-400 uppercase">3 Months</p>
-              <p className="text-xl font-black text-teal-700">₹{gym.threeMonthMembershipPrice}</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase">3 Months</p>
+              <p className="text-lg sm:text-xl font-black text-teal-700">₹{gym.threeMonthMembershipPrice}</p>
             </div>
           ) : null}
         </div>
       </div>
 
       {/* 3. PHOTO GALLERY */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
-        <div className="h-72 sm:h-96 w-full rounded-xl overflow-hidden bg-slate-900 relative">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
+        <div className="h-56 sm:h-80 md:h-96 w-full rounded-xl overflow-hidden bg-slate-900 relative">
           <img
             src={photos[activePhotoIndex]}
             alt={gym.gymName}
@@ -243,11 +243,11 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
       </div>
 
       {/* 4. DETAILS GRID (DESCRIPTION, FACILITIES, HOURS & LOCATION) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left Column (2 Cols wide): About & Facilities */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* About Section */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-3">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Sparkles className="h-4 w-4 text-[#00A389]" />
               <span>About the Gym</span>
@@ -259,18 +259,18 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
           </div>
 
           {/* Facilities & Amenities */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Layers className="h-4 w-4 text-[#00A389]" />
               <span>Facilities & Amenities</span>
             </h3>
 
             {gym.facilities && gym.facilities.length > 0 ? (
-              <div className="flex flex-wrap gap-2.5">
+              <div className="flex flex-wrap gap-2 sm:gap-2.5">
                 {gym.facilities.map((fac, idx) => (
                   <span
                     key={idx}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-700"
+                    className="inline-flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-semibold text-slate-700"
                   >
                     <CheckCircle2 className="h-3.5 w-3.5 text-[#00A389]" />
                     <span>{fac}</span>
@@ -283,7 +283,7 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
           </div>
 
           {/* Operating Hours */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Clock className="h-4 w-4 text-[#00A389]" />
               <span>Operating Hours</span>
@@ -311,9 +311,9 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
         </div>
 
         {/* Right Column: Contact, Location & System Info */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Location & Contact Card */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Compass className="h-4 w-4 text-[#00A389]" />
               <span>Location & Contact</span>
@@ -361,7 +361,7 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
           </div>
 
           {/* Listing Status & Meta Card */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-3">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <Calendar className="h-4 w-4 text-[#00A389]" />
               <span>Listing Metadata</span>

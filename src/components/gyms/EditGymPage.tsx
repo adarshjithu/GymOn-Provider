@@ -367,31 +367,31 @@ export function EditGymPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-sans">
       {/* 1. TOP BREADCRUMB & HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
           <button
             type="button"
             onClick={() => navigate(`/gyms/${urlSlug}`)}
-            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs"
+            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs shrink-0"
             title="Back to Gym Details"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
-            <div className="flex items-center space-x-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider truncate">
               <span>My Gyms</span>
               <span>/</span>
-              <span className="text-slate-600 truncate max-w-[200px]">{gymName}</span>
+              <span className="text-slate-600 truncate max-w-[140px] sm:max-w-[200px]">{gymName}</span>
               <span>/</span>
               <span className="text-[#00A389]">Edit</span>
             </div>
-            <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight truncate">
               Edit Gym Profile
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => navigate(`/gyms/${urlSlug}`)}
@@ -411,7 +411,7 @@ export function EditGymPage() {
         className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden"
       >
         {/* Card Header Bar */}
-        <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
           <div className="flex items-center space-x-3.5">
             <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
               <Building2 className="h-5 w-5" />
@@ -430,7 +430,7 @@ export function EditGymPage() {
           </div>
 
           {/* Segmented Status Pill */}
-          <div className="flex items-center p-1 bg-slate-100 border border-slate-200/80 rounded-xl shrink-0">
+          <div className="flex items-center p-1 bg-slate-100 border border-slate-200/80 rounded-xl self-start sm:self-auto shrink-0">
             <button
               type="button"
               onClick={() => setStatus('APPROVED')}
@@ -458,7 +458,7 @@ export function EditGymPage() {
         </div>
 
         {/* Card Body */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           {!canEditGym && (
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold flex items-center space-x-2.5 shadow-xs">
               <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
@@ -768,7 +768,7 @@ export function EditGymPage() {
         </div>
 
         {/* Card Footer Action Bar */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           {detailsFeedback ? (
             <div
               className={`text-xs font-semibold flex items-center space-x-2 ${
@@ -808,7 +808,7 @@ export function EditGymPage() {
       {/* ============================================================== */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
         {/* Card Header Bar */}
-        <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
           <div className="flex items-center space-x-3.5">
             <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
               <ImageIcon className="h-5 w-5" />
@@ -832,7 +832,7 @@ export function EditGymPage() {
         </div>
 
         {/* Card Body */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
           {/* Direct S3 Upload Dropzone / Button */}
           <div className="p-6 border-2 border-dashed border-teal-200 rounded-2xl bg-teal-50/30 hover:bg-teal-50/60 transition-colors flex flex-col items-center justify-center text-center space-y-3">
             <input
@@ -995,7 +995,7 @@ export function EditGymPage() {
         </div>
 
         {/* Card Footer Action Bar */}
-        <div className="px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="px-4 sm:px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           {photosFeedback ? (
             <div
               className={`text-xs font-semibold flex items-center space-x-2 ${

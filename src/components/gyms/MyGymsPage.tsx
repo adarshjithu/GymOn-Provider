@@ -164,77 +164,80 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
   return (
     <div className="space-y-6">
       {/* 1. TOP STATS & BANNER ROW */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-6">
         {/* Left: Banner Info */}
-        <div className="flex items-center space-x-4">
-          <div className="h-14 w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[#00A389] shrink-0">
-            <Building2 className="h-7 w-7 stroke-[2]" />
+        <div className="flex items-center space-x-3.5 sm:space-x-4">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-[#00A389] shrink-0">
+            <Building2 className="h-6 w-6 sm:h-7 sm:w-7 stroke-[2]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
               Manage all your gyms in one place
             </h2>
-            <p className="text-xs text-slate-500 font-medium mt-1">
+            <p className="text-xs text-slate-500 font-medium mt-0.5 sm:mt-1">
               Add, edit and manage your gym listings.
             </p>
           </div>
         </div>
 
         {/* Middle & Right: Stats Row + Add Gym Button */}
-        <div className="flex flex-wrap items-center gap-3 justify-between xl:justify-end">
-          {/* Stat Card 1: Total Gyms */}
-          <div className="bg-emerald-50/50 border border-emerald-100/80 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-              <Building2 className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
-                {isLoading ? '-' : totalGyms}
+        <div className="flex flex-col sm:flex-row xl:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 justify-between xl:justify-end w-full xl:w-auto">
+          {/* Stat Cards 2x2 on mobile, 4-col on tablet/desktop */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex gap-2 sm:gap-3 w-full xl:w-auto">
+            {/* Stat Card 1: Total Gyms */}
+            <div className="bg-emerald-50/50 border border-emerald-100/80 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <Building2 className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Total Gyms</p>
-              <p className="text-[10px] text-slate-400">Registered</p>
+              <div className="min-w-0">
+                <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
+                  {isLoading ? '-' : totalGyms}
+                </div>
+                <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Total Gyms</p>
+                <p className="text-[10px] text-slate-400 truncate">Registered</p>
+              </div>
             </div>
-          </div>
 
-          {/* Stat Card 2: Live */}
-          <div className="bg-teal-50/40 border border-teal-100/80 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
-              <CheckCircle2 className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
-                {isLoading ? '-' : liveGyms}
+            {/* Stat Card 2: Live */}
+            <div className="bg-teal-50/40 border border-teal-100/80 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Live</p>
-              <p className="text-[10px] text-slate-400">Published</p>
+              <div className="min-w-0">
+                <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
+                  {isLoading ? '-' : liveGyms}
+                </div>
+                <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Live</p>
+                <p className="text-[10px] text-slate-400 truncate">Published</p>
+              </div>
             </div>
-          </div>
 
-          {/* Stat Card 3: Pending Approval */}
-          <div className="bg-amber-50/50 border border-amber-200/90 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[130px]">
-            <div className="h-9 w-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-              <Clock className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-lg font-black text-amber-700 leading-none">
-                {isLoading ? '-' : pendingGyms}
+            {/* Stat Card 3: Pending Approval */}
+            <div className="bg-amber-50/50 border border-amber-200/90 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                <Clock className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-bold text-slate-800 mt-1">Pending</p>
-              <p className="text-[10px] text-amber-600 font-semibold">Under Review</p>
+              <div className="min-w-0">
+                <div className="text-base sm:text-lg font-black text-amber-700 leading-none truncate">
+                  {isLoading ? '-' : pendingGyms}
+                </div>
+                <p className="text-[11px] font-bold text-slate-800 mt-1 truncate">Pending</p>
+                <p className="text-[10px] text-amber-600 font-semibold truncate">Under Review</p>
+              </div>
             </div>
-          </div>
 
-          {/* Stat Card 4: Draft & Inactive */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[110px]">
-            <div className="h-9 w-9 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
-              <PauseCircle className="h-4 w-4" />
-            </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
-                {isLoading ? '-' : draftGyms + inactiveGyms}
+            {/* Stat Card 4: Draft & Inactive */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+              <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-slate-200 text-slate-600 flex items-center justify-center shrink-0">
+                <PauseCircle className="h-4 w-4" />
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Draft</p>
-              <p className="text-[10px] text-slate-400">Offline</p>
+              <div className="min-w-0">
+                <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
+                  {isLoading ? '-' : draftGyms + inactiveGyms}
+                </div>
+                <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Draft</p>
+                <p className="text-[10px] text-slate-400 truncate">Offline</p>
+              </div>
             </div>
           </div>
 
@@ -242,14 +245,14 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
           {canCreateGym ? (
             <button
               onClick={handleAddGymClick}
-              className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#00A389] to-[#00C49F] hover:opacity-95 text-white font-bold text-xs flex items-center space-x-2 transition-all shadow-md shadow-[#00A389]/20 cursor-pointer active:scale-95 shrink-0"
+              className="w-full sm:w-auto px-5 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-[#00A389] to-[#00C49F] hover:opacity-95 text-white font-bold text-xs flex items-center justify-center space-x-2 transition-all shadow-md shadow-[#00A389]/20 cursor-pointer active:scale-95 shrink-0"
             >
               <Plus className="h-4 w-4 stroke-[3]" />
               <span>Add New Gym</span>
             </button>
           ) : (
             <div
-              className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold flex items-center space-x-1.5"
+              className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold flex items-center justify-center space-x-1.5"
               title="Your account does not have permission to add new gyms"
             >
               <span>Creation Restricted</span>
@@ -275,9 +278,9 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
       )}
 
       {/* 2. SEARCH, FILTER & VIEW CONTROLS */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Left: Search & Status Filter */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1 max-w-xl">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 flex-1 max-w-xl">
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="h-4 w-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -291,12 +294,12 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
           </div>
 
           {/* Status Dropdown */}
-          <div className="relative shrink-0">
+          <div className="relative shrink-0 w-full sm:w-auto">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
               aria-label="Filter gyms by status"
-              className="appearance-none bg-white border border-slate-200/90 rounded-xl pl-4 pr-9 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#00A389] transition-all shadow-2xs cursor-pointer"
+              className="w-full sm:w-auto appearance-none bg-white border border-slate-200/90 rounded-xl pl-4 pr-9 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#00A389] transition-all shadow-2xs cursor-pointer"
             >
               <option value="All">All Status</option>
               <option value="Live">Live / Approved</option>
@@ -309,14 +312,14 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
         </div>
 
         {/* Right: Sort & Layout Mode */}
-        <div className="flex items-center space-x-3 justify-end">
+        <div className="flex items-center justify-between md:justify-end gap-2.5 w-full md:w-auto">
           {/* Sort Dropdown */}
-          <div className="relative">
+          <div className="relative flex-1 md:flex-initial">
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               aria-label="Sort gyms"
-              className="appearance-none bg-white border border-slate-200/90 rounded-xl pl-4 pr-9 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#00A389] transition-all shadow-2xs cursor-pointer"
+              className="w-full md:w-auto appearance-none bg-white border border-slate-200/90 rounded-xl pl-4 pr-9 py-2.5 text-xs font-semibold text-slate-700 focus:outline-none focus:border-[#00A389] transition-all shadow-2xs cursor-pointer"
             >
               <option value="recently">Sort by: Recently Added</option>
               <option value="price-asc">Price: Low to High</option>
@@ -327,7 +330,7 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
           </div>
 
           {/* Layout Toggle Buttons */}
-          <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shadow-2xs">
+          <div className="flex items-center bg-white border border-slate-200/90 rounded-xl p-1 shadow-2xs shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
@@ -551,12 +554,12 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F8FAFC] border-b border-slate-200/80 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-6 py-4">Gym Name</th>
-                  <th className="px-6 py-4">Location</th>
-                  <th className="px-6 py-4">Day Pass Price</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Last Updated</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Gym Name</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Location</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Day Pass Price</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Last Updated</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -573,7 +576,7 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                     >
                       {/* Name & Avatar */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-3">
                           <div
                             className={`h-9 w-9 rounded-full ${avatarStyle.bg} ${avatarStyle.text} font-bold text-xs flex items-center justify-center shrink-0 border ${avatarStyle.ring}`}
@@ -589,17 +592,17 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                       </td>
 
                       {/* Location */}
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-slate-600 font-medium">
                         {gym.city || gym.address}
                       </td>
 
                       {/* Day Pass Price */}
-                      <td className="px-6 py-4 whitespace-nowrap font-bold text-slate-900">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap font-bold text-slate-900">
                         {gym.dayPassPrice > 0 ? `₹${gym.dayPassPrice}` : '—'}
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span
                           className={`inline-block px-3 py-1 rounded-full text-[11px] font-bold ${
                             isLive
@@ -614,12 +617,12 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                       </td>
 
                       {/* Last Updated */}
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-medium text-[11px]">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-slate-500 font-medium text-[11px]">
                         {gym.updatedAt || 'Recently'}
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                         <div
                           className="flex items-center justify-end space-x-3 text-slate-400"
                           onClick={(e) => e.stopPropagation()}

@@ -70,22 +70,22 @@ export function CustomerLeadsSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       {/* 1. TOP BANNER SKELETON */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="h-14 w-14 rounded-2xl bg-slate-200 shrink-0" />
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center space-x-3.5 sm:space-x-4">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-slate-200 shrink-0" />
           <div className="space-y-2">
             <div className="h-5 w-48 bg-slate-200 rounded-md" />
-            <div className="h-3.5 w-60 bg-slate-100 rounded-md" />
+            <div className="h-3.5 w-56 sm:w-60 bg-slate-100 rounded-md" />
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex gap-2 sm:gap-3 w-full xl:w-auto">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 min-w-[110px] space-y-1.5"
+              className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:px-4 sm:py-3 w-full xl:w-auto min-w-0 space-y-1.5"
             >
-              <div className="h-5 w-10 bg-slate-200 rounded" />
+              <div className="h-4 sm:h-5 w-10 bg-slate-200 rounded" />
               <div className="h-2.5 w-14 bg-slate-100 rounded" />
             </div>
           ))}

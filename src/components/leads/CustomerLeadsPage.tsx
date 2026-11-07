@@ -212,76 +212,76 @@ export function CustomerLeadsPage({
   return (
     <div className="space-y-6">
       {/* 1. TOP STATS & BANNER */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="h-14 w-14 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-[#00A389] shrink-0">
-            <Users className="h-7 w-7 stroke-[2]" />
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center space-x-3.5 sm:space-x-4">
+          <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center text-[#00A389] shrink-0">
+            <Users className="h-6 w-6 sm:h-7 sm:w-7 stroke-[2]" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
               Customer Leads & Enquiries
             </h2>
-            <p className="text-xs text-slate-500 font-medium mt-1">
+            <p className="text-xs text-slate-500 font-medium mt-0.5 sm:mt-1">
               Track customer visit requests, respond to day pass inquiries and manage follow-ups.
             </p>
           </div>
         </div>
 
-        {/* Metric Cards Row */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Metric Cards Row: 2x2 grid on mobile */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:flex gap-2.5 sm:gap-3 w-full xl:w-auto">
           {/* Total Leads */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
+          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-slate-200/80 text-slate-700 flex items-center justify-center shrink-0">
               <Users className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
+            <div className="min-w-0">
+              <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
                 {isLoading && leads.length === 0 ? '-' : totalCount}
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Total Leads</p>
-              <p className="text-[10px] text-slate-400">All Gyms</p>
+              <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Total Leads</p>
+              <p className="text-[10px] text-slate-400 truncate">All Gyms</p>
             </div>
           </div>
 
           {/* New Leads */}
-          <div className="bg-sky-50/50 border border-sky-100 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+          <div className="bg-sky-50/50 border border-sky-100 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
               <Clock className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
+            <div className="min-w-0">
+              <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
                 {isLoading && leads.length === 0 ? '-' : newCount}
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">New</p>
-              <p className="text-[10px] text-slate-400">Needs Action</p>
+              <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">New</p>
+              <p className="text-[10px] text-slate-400 truncate">Needs Action</p>
             </div>
           </div>
 
           {/* Contacted */}
-          <div className="bg-amber-50/50 border border-amber-100 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+          <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
               <PhoneCall className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
+            <div className="min-w-0">
+              <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
                 {isLoading && leads.length === 0 ? '-' : contactedCount}
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Contacted</p>
-              <p className="text-[10px] text-slate-400">In Follow-up</p>
+              <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Contacted</p>
+              <p className="text-[10px] text-slate-400 truncate">In Follow-up</p>
             </div>
           </div>
 
           {/* Closed */}
-          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl px-4 py-3 flex items-center space-x-3 min-w-[120px]">
-            <div className="h-9 w-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+          <div className="bg-emerald-50/50 border border-emerald-100 rounded-xl p-2.5 sm:px-4 sm:py-3 flex items-center space-x-2.5 sm:space-x-3 w-full xl:w-auto min-w-0">
+            <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
               <CheckCircle2 className="h-4 w-4" />
             </div>
-            <div>
-              <div className="text-lg font-black text-slate-900 leading-none">
+            <div className="min-w-0">
+              <div className="text-base sm:text-lg font-black text-slate-900 leading-none truncate">
                 {isLoading && leads.length === 0 ? '-' : closedCount}
               </div>
-              <p className="text-[11px] font-bold text-slate-700 mt-1">Closed</p>
-              <p className="text-[10px] text-slate-400">Converted</p>
+              <p className="text-[11px] font-bold text-slate-700 mt-1 truncate">Closed</p>
+              <p className="text-[10px] text-slate-400 truncate">Converted</p>
             </div>
           </div>
         </div>
@@ -434,12 +434,12 @@ export function CustomerLeadsPage({
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F8FAFC] border-b border-slate-200/80 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-6 py-4">Customer</th>
-                  <th className="px-6 py-4">Assigned Gym</th>
-                  <th className="px-6 py-4">Customer Message</th>
-                  <th className="px-6 py-4">Requested Date</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Customer</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Assigned Gym</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Customer Message</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Requested Date</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -453,7 +453,7 @@ export function CustomerLeadsPage({
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                     >
                       {/* Customer Info */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 rounded-full bg-[#060E1E] text-[#00C49F] font-bold text-xs flex items-center justify-center shrink-0 border border-slate-800">
                             {initials}
@@ -482,7 +482,7 @@ export function CustomerLeadsPage({
                       </td>
 
                       {/* Gym Badge */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200">
                           <Building2 className="h-3.5 w-3.5 text-[#00A389]" />
                           <span>{lead.gymName}</span>
@@ -495,14 +495,14 @@ export function CustomerLeadsPage({
                       </td>
 
                       {/* Customer Message */}
-                      <td className="px-6 py-4 max-w-sm">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 max-w-sm">
                         <p className="text-slate-700 line-clamp-2 text-xs leading-relaxed">
                           {lead.message || 'Customer requested day-pass assistance.'}
                         </p>
                       </td>
 
                       {/* Requested Date */}
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-slate-600 font-medium">
                         <div className="flex items-center space-x-1.5 text-xs text-slate-700 font-semibold">
                           <Calendar className="h-3.5 w-3.5 text-slate-400" />
                           <span>{lead.preferredDate || 'Flexible'}</span>
@@ -516,12 +516,12 @@ export function CustomerLeadsPage({
                       </td>
 
                       {/* Status Badge */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         {getStatusBadge(lead.status)}
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                         <div
                           className="flex items-center justify-end space-x-2"
                           onClick={(e) => e.stopPropagation()}
@@ -564,7 +564,7 @@ export function CustomerLeadsPage({
           </div>
 
           {/* Table Footer with Server-Side Pagination */}
-          <div className="px-6 py-3.5 bg-[#F8FAFC] border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
+          <div className="px-3.5 sm:px-6 py-3 sm:py-3.5 bg-[#F8FAFC] border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
             <div className="flex flex-wrap items-center gap-3">
               <span className="flex items-center space-x-1.5 text-slate-700">
                 <Sparkles className="h-3.5 w-3.5 text-[#00A389]" />

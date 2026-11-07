@@ -28,9 +28,32 @@ export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Auto-close mobile drawer on route navigation
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  }, [location.pathname]);
+
+  // Sync sidebar state on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Dashboard state
   const [oneEntryPrice, setOneEntryPrice] = useState(150);
@@ -146,6 +169,7 @@ export default function App() {
         activeTab={headerTitle}
         isSidebarOpen={isSidebarOpen}
         onSelectTab={handleSelectTab}
+        onClose={() => setIsSidebarOpen(false)}
       />
 
       {/* MAIN CONTAINER */}
@@ -160,7 +184,7 @@ export default function App() {
         />
 
         {/* WORKSPACE */}
-        <main className="flex-1 p-6 sm:p-8 bg-[#F4F7FA] overflow-y-auto flex flex-col justify-between">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 bg-[#F4F7FA] overflow-y-auto flex flex-col justify-between">
           <div className="max-w-7xl w-full mx-auto space-y-6">
             <Routes>
               {/* Redirect root to dashboard */}

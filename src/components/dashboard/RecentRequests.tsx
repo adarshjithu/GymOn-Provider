@@ -26,7 +26,7 @@ export function RecentRequests({ requests, isLoading, onNavigate }: RecentReques
   }
 
   return (
-    <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between space-y-4">
+    <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
       <div>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-bold text-slate-900">Recent Requests</h3>
@@ -44,23 +44,23 @@ export function RecentRequests({ requests, isLoading, onNavigate }: RecentReques
             requests.map((req) => (
               <div
                 key={req.id}
-                className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100/60 transition-colors"
+                className="flex items-center justify-between p-3 sm:p-3.5 bg-slate-50 border border-slate-100 rounded-xl hover:bg-slate-100/60 transition-colors gap-2"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="h-10 w-10 rounded-full bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center shrink-0">
+                <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-slate-200 text-slate-700 font-bold text-xs sm:text-sm flex items-center justify-center shrink-0">
                     {req.name ? req.name[0]?.toUpperCase() : 'U'}
                   </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-900">{req.name}</h4>
-                    <p className="text-[11px] text-slate-500">{req.date}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Requested Time: {req.requestedTime}
+                  <div className="min-w-0">
+                    <h4 className="text-xs font-bold text-slate-900 truncate">{req.name}</h4>
+                    <p className="text-[11px] text-slate-500 truncate">{req.date}</p>
+                    <p className="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">
+                      Requested: {req.requestedTime}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-bold border border-blue-100">
+                <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+                  <span className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-600 rounded-md text-[11px] sm:text-xs font-bold border border-blue-100">
                     {req.requestedTime}
                   </span>
                   <button

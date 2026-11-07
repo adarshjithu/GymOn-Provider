@@ -39,31 +39,32 @@ export function Header({ activeTab, onToggleSidebar, user, onLogout, onNavigate 
     .toUpperCase() || "PR";
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between shrink-0 shadow-xs z-20">
+    <header className="h-16 bg-white border-b border-slate-200/80 px-3.5 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 shadow-xs z-20">
       {/* Left: Sidebar Toggle & Page Title */}
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2.5 sm:space-x-4 min-w-0">
         <button
           onClick={onToggleSidebar}
-          className="p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 cursor-pointer transition-colors"
+          className="p-2 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer transition-colors shrink-0"
           title="Toggle Sidebar"
+          aria-label="Toggle navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+        <h1 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight truncate">
           {activeTab}
         </h1>
       </div>
 
-      {/* Right: User Profile (Notification bell removed per request) */}
-      <div className="flex items-center space-x-4">
+      {/* Right: User Profile */}
+      <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
         {/* User Profile Dropdown Container */}
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center space-x-3 cursor-pointer select-none focus:outline-none p-1.5 rounded-xl hover:bg-slate-50 transition-colors"
+            className="flex items-center space-x-2 sm:space-x-3 cursor-pointer select-none focus:outline-none p-1 sm:p-1.5 rounded-xl hover:bg-slate-50 transition-colors"
           >
-            <div className="h-9 w-9 rounded-full bg-[#00C49F] text-white font-bold text-xs flex items-center justify-center shadow-xs">
+            <div className="h-9 w-9 rounded-full bg-[#00C49F] text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
               {initials}
             </div>
             <div className="hidden sm:flex flex-col text-left">
@@ -75,7 +76,7 @@ export function Header({ activeTab, onToggleSidebar, user, onLogout, onNavigate 
               </span>
             </div>
             <ChevronDown
-              className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${
+              className={`h-4 w-4 text-slate-400 transition-transform duration-200 shrink-0 ${
                 isDropdownOpen ? "rotate-180" : ""
               }`}
             />

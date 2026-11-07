@@ -110,10 +110,10 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
   return (
     <div className="space-y-6">
       {/* 1. TOP NAVIGATION & BACK BUTTON */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <button
           onClick={handleBack}
-          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
+          className="inline-flex items-center space-x-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group self-start"
         >
           <div className="p-1.5 rounded-lg bg-white border border-slate-200 group-hover:bg-slate-100 transition-colors">
             <ArrowLeft className="h-4 w-4" />
@@ -122,10 +122,10 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
         </button>
 
         {/* Action Shortcuts */}
-        <div className="flex items-center space-x-2.5">
+        <div className="flex items-center space-x-2.5 w-full sm:w-auto">
           <a
             href={`tel:${lead.customerPhone}`}
-            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1.5"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5"
           >
             <Phone className="h-3.5 w-3.5 text-[#00A389]" />
             <span>Call Customer</span>
@@ -135,7 +135,7 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
             href={`https://wa.me/${cleanPhone}`}
             target="_blank"
             rel="noreferrer"
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center space-x-1.5"
+            className="flex-1 sm:flex-initial px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5"
           >
             <MessageSquare className="h-3.5 w-3.5" />
             <span>WhatsApp</span>
@@ -144,43 +144,43 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
       </div>
 
       {/* 2. CUSTOMER LEAD HEADER BANNER */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-2xl bg-[#060E1E] border border-slate-800 text-[#00C49F] font-black text-xl flex items-center justify-center shadow-md shrink-0">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center space-x-3.5 sm:space-x-4 min-w-0">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-[#060E1E] border border-slate-800 text-[#00C49F] font-black text-xl flex items-center justify-center shadow-md shrink-0">
             {initials}
           </div>
 
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center space-x-3">
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight truncate">
                 {lead.customerName}
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 font-medium mt-1">
-              <span className="flex items-center">
-                <Building2 className="h-3.5 w-3.5 text-[#00A389] mr-1" />
-                {lead.gymName}
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-slate-500 font-medium mt-1">
+              <span className="flex items-center truncate">
+                <Building2 className="h-3.5 w-3.5 text-[#00A389] mr-1 shrink-0" />
+                <span className="truncate">{lead.gymName}</span>
               </span>
               <span>&bull;</span>
-              <span className="flex items-center">
-                <Calendar className="h-3.5 w-3.5 text-slate-400 mr-1" />
-                Requested: {lead.preferredDate || 'Flexible date'}
+              <span className="flex items-center truncate">
+                <Calendar className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
+                <span>Requested: {lead.preferredDate || 'Flexible date'}</span>
               </span>
             </div>
           </div>
         </div>
 
         {/* Status Control Switcher */}
-        <div className="border-t md:border-t-0 md:border-l border-slate-200 pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
+        <div className="border-t md:border-t-0 md:border-l border-slate-200/80 pt-3.5 sm:pt-4 md:pt-0 md:pl-6 w-full md:w-auto">
           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
             Lead Status {isUpdatingStatus && <span className="text-[#00A389] text-[10px]">(Saving...)</span>}
           </p>
-          <div className="flex items-center space-x-1.5 bg-[#F8FAFC] border border-slate-200 rounded-xl p-1">
+          <div className="flex items-center space-x-1.5 bg-[#F8FAFC] border border-slate-200 rounded-xl p-1 w-full sm:w-auto">
             <button
               onClick={() => handleStatusChange('NEW')}
               disabled={isUpdatingStatus}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                 lead.status === 'NEW'
                   ? 'bg-sky-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -191,7 +191,7 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
             <button
               onClick={() => handleStatusChange('CONTACTED')}
               disabled={isUpdatingStatus}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                 lead.status === 'CONTACTED'
                   ? 'bg-amber-500 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -202,7 +202,7 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
             <button
               onClick={() => handleStatusChange('CLOSED')}
               disabled={isUpdatingStatus}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer text-center ${
                 lead.status === 'CLOSED'
                   ? 'bg-[#00A389] text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -215,21 +215,21 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
       </div>
 
       {/* 3. DETAILS GRID */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left 2 Cols: Message, Inquiry Details, Notes */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Customer Message Card */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-3">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-3">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <MessageSquare className="h-4 w-4 text-[#00A389]" />
               <span>Customer Message & Inquiry</span>
             </h3>
 
-            <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/60 text-slate-700 text-xs leading-relaxed italic">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-slate-50/80 border border-slate-200/60 text-slate-700 text-xs leading-relaxed italic">
               "{lead.message || 'No written message provided by customer.'}"
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-2 text-xs">
               <div>
                 <span className="text-[11px] font-semibold text-slate-400 uppercase block">Preferred Date</span>
                 <span className="font-bold text-slate-800 mt-0.5 block">{lead.preferredDate || 'Anytime'}</span>
@@ -246,13 +246,13 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
           </div>
 
           {/* Follow-up Notes & Activity */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <ShieldCheck className="h-4 w-4 text-[#00A389]" />
               <span>Follow-up & Communication History</span>
             </h3>
 
-            <div className="p-4 rounded-xl bg-teal-50/50 border border-teal-100 text-xs text-teal-900 space-y-1">
+            <div className="p-3.5 sm:p-4 rounded-xl bg-teal-50/50 border border-teal-100 text-xs text-teal-900 space-y-1">
               <div className="flex items-center justify-between font-bold text-[11px] text-teal-800">
                 <span>Status Update</span>
                 <span>{lead.updatedAt || 'Recent'}</span>
@@ -265,9 +265,9 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
         </div>
 
         {/* Right 1 Col: Contact Info & Associated Gym */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Contact Card */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-4">
+          <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-4">
             <h3 className="text-sm font-bold text-slate-900 flex items-center space-x-2">
               <User className="h-4 w-4 text-[#00A389]" />
               <span>Customer Contact</span>

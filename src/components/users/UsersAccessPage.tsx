@@ -246,23 +246,23 @@ export function UsersAccessPage() {
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 font-sans">
       {/* 1. TOP HEADER & SUMMARY BANNER */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-        <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-2xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] text-white flex items-center justify-center font-black shadow-md shadow-[#00C49F]/20 shrink-0">
-            <ShieldCheck className="h-8 w-8 stroke-[2.2]" />
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+        <div className="flex items-center space-x-3.5 sm:space-x-4 min-w-0">
+          <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] text-white flex items-center justify-center font-black shadow-md shadow-[#00C49F]/20 shrink-0">
+            <ShieldCheck className="h-7 w-7 sm:h-8 sm:w-8 stroke-[2.2]" />
           </div>
 
-          <div>
-            <div className="flex items-center space-x-3">
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate">
                 Users & Access Management
               </h1>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#00A389] border border-teal-200">
-                Primary Provider Portal
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-[#00A389] border border-teal-200 shrink-0">
+                Primary Portal
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-1">
-              Create sub-providers (staff, managers, trainers) and configure granular permissions for gym and customer lead management.
+            <p className="text-xs text-slate-500 font-medium mt-0.5 sm:mt-1 truncate">
+              Create sub-providers (staff, managers, trainers) and configure permissions.
             </p>
           </div>
         </div>
@@ -273,7 +273,7 @@ export function UsersAccessPage() {
             setErrorMsg(null);
             setIsAddModalOpen(true);
           }}
-          className="px-5 py-2.5 bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-[#00A389]/20 flex items-center space-x-2 cursor-pointer shrink-0"
+          className="w-full md:w-auto px-5 py-2.5 bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-[#00A389]/20 flex items-center justify-center space-x-2 cursor-pointer shrink-0"
         >
           <UserPlus className="h-4 w-4" />
           <span>Add Sub-Provider</span>
@@ -349,16 +349,16 @@ export function UsersAccessPage() {
       {/* 4. SUB-PROVIDERS LIST TABLE */}
       <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
         {/* Table Header Action Bar */}
-        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center space-x-2">
             <Shield className="h-4 w-4 text-[#00A389]" />
             <h2 className="text-sm font-bold text-slate-900">Registered Sub-Providers</h2>
             <span className="text-xs text-slate-400">({filteredUsers.length})</span>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
             {/* Search Input */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative flex-1 sm:w-64">
               <Search className="h-4 w-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
@@ -372,7 +372,7 @@ export function UsersAccessPage() {
             <button
               type="button"
               onClick={fetchSubProviders}
-              className="p-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+              className="p-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer shrink-0"
               title="Refresh users"
             >
               <RefreshCw className="h-4 w-4" />
@@ -384,7 +384,7 @@ export function UsersAccessPage() {
         {isLoading ? (
           <UsersAccessTableSkeleton />
         ) : filteredUsers.length === 0 ? (
-          <div className="p-16 text-center space-y-3">
+          <div className="p-12 sm:p-16 text-center space-y-3">
             <div className="h-12 w-12 rounded-2xl bg-teal-50 text-[#00A389] flex items-center justify-center mx-auto">
               <UserPlus className="h-6 w-6" />
             </div>
@@ -409,11 +409,11 @@ export function UsersAccessPage() {
             <table className="w-full text-left text-xs">
               <thead className="bg-[#F8FAFC] border-b border-slate-200/80 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-6 py-4">Sub-Provider</th>
-                  <th className="px-6 py-4">Contact</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4">Assigned Permissions</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Sub-Provider</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Contact</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Assigned Permissions</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -430,7 +430,7 @@ export function UsersAccessPage() {
                   return (
                     <tr key={sub.id} className="hover:bg-slate-50/80 transition-colors">
                       {/* Name & Avatar */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-3">
                           <div className="h-10 w-10 rounded-xl bg-slate-900 text-teal-400 font-bold text-xs flex items-center justify-center shrink-0 shadow-xs border border-slate-800">
                             {initials}
@@ -447,7 +447,7 @@ export function UsersAccessPage() {
                       </td>
 
                       {/* Contact Info */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <div className="space-y-1">
                           <div className="flex items-center space-x-1.5 text-slate-600 font-medium">
                             <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
@@ -461,7 +461,7 @@ export function UsersAccessPage() {
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                         <span
                           className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
                             sub.isActive
@@ -479,7 +479,7 @@ export function UsersAccessPage() {
                       </td>
 
                       {/* Permissions Tags */}
-                      <td className="px-6 py-4">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4">
                         <div className="flex flex-wrap gap-1.5 max-w-md">
                           {perms.canEditGym && (
                             <span className="px-2 py-0.5 rounded-md bg-teal-50 border border-teal-100 text-[#00A389] text-[10px] font-semibold">
@@ -515,7 +515,7 @@ export function UsersAccessPage() {
                       </td>
 
                       {/* Action Buttons */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end space-x-2">
                           <button
                             type="button"
@@ -556,10 +556,10 @@ export function UsersAccessPage() {
 
       {/* ==================== MODAL 1: ADD SUB-PROVIDER ==================== */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
             {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-teal-50 text-[#00A389]">
                   <UserPlus className="h-5 w-5" />
@@ -581,7 +581,7 @@ export function UsersAccessPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleCreateSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleCreateSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -751,9 +751,9 @@ export function UsersAccessPage() {
 
       {/* ==================== MODAL 2: EDIT SUB-PROVIDER ==================== */}
       {isEditModalOpen && selectedSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-xl w-full border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-xl w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
+            <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-teal-50 text-[#00A389]">
                   <Pencil className="h-5 w-5" />
@@ -774,7 +774,7 @@ export function UsersAccessPage() {
               </button>
             </div>
 
-            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleEditSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
@@ -913,9 +913,9 @@ export function UsersAccessPage() {
 
       {/* ==================== MODAL 3: CHANGE PASSWORD ==================== */}
       {isPasswordModalOpen && selectedSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-2xl max-w-md w-full border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] flex flex-col border border-slate-200 shadow-2xl overflow-hidden animate-scaleUp">
+            <div className="px-5 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
                   <KeyRound className="h-5 w-5" />
@@ -934,7 +934,7 @@ export function UsersAccessPage() {
               </button>
             </div>
 
-            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+            <form onSubmit={handlePasswordSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   New Password <span className="text-rose-500">*</span>

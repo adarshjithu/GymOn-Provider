@@ -216,63 +216,63 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-10">
       {/* 1. TOP SUMMARY BANNER CARD */}
-      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xs relative overflow-hidden">
         {/* Subtle decorative background gradient accent */}
         <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-teal-50/60 to-transparent pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center space-x-5">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-5">
             {/* Big Avatar */}
-            <div className="h-20 w-20 rounded-2xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] text-white font-extrabold text-2xl flex items-center justify-center shadow-md shadow-[#00C49F]/25 shrink-0 border-2 border-white">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] text-white font-extrabold text-xl sm:text-2xl flex items-center justify-center shadow-md shadow-[#00C49F]/25 shrink-0 border-2 border-white">
               {initials}
             </div>
 
-            <div className="space-y-1">
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight truncate">
                   {displayName}
                 </h2>
-                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
                   <span>Verified Provider</span>
                 </span>
-                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">
+                <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />
                   <span>Active</span>
                 </span>
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                <span className="flex items-center space-x-1.5">
-                  <Mail className="h-3.5 w-3.5 text-slate-400" />
-                  <span>{displayEmail}</span>
+              <div className="flex flex-wrap items-center gap-2.5 sm:gap-4 text-xs text-slate-500">
+                <span className="flex items-center space-x-1.5 truncate">
+                  <Mail className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{displayEmail}</span>
                 </span>
-                <span className="flex items-center space-x-1.5">
-                  <Phone className="h-3.5 w-3.5 text-slate-400" />
-                  <span>{displayPhone}</span>
+                <span className="flex items-center space-x-1.5 truncate">
+                  <Phone className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{displayPhone}</span>
                 </span>
-                <span className="flex items-center space-x-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                  <span>Partner since {formattedJoinDate}</span>
+                <span className="flex items-center space-x-1.5 truncate">
+                  <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">Partner since {formattedJoinDate}</span>
                 </span>
               </div>
             </div>
           </div>
 
           {/* Quick Metrics */}
-          <div className="flex items-center gap-3 self-start md:self-auto shrink-0">
-            <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-4 py-3 min-w-[110px] text-center">
-              <div className="text-xl font-black text-slate-900 leading-tight">
+          <div className="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full md:w-auto shrink-0 pt-2 sm:pt-0 border-t md:border-t-0 border-slate-100">
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-center w-full sm:min-w-[110px]">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">
                 {isLoading ? '-' : displayGymCount}
               </div>
-              <p className="text-[11px] font-bold text-slate-600 mt-0.5">My Gyms</p>
+              <p className="text-[10px] sm:text-[11px] font-bold text-slate-600 mt-0.5">My Gyms</p>
             </div>
 
-            <div className="bg-teal-50/50 border border-teal-100 rounded-xl px-4 py-3 min-w-[110px] text-center">
-              <div className="text-xl font-black text-[#00A389] leading-tight">
+            <div className="bg-teal-50/50 border border-teal-100 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-center w-full sm:min-w-[110px]">
+              <div className="text-lg sm:text-xl font-black text-[#00A389] leading-tight">
                 {isLoading ? '-' : displayLeadsCount}
               </div>
-              <p className="text-[11px] font-bold text-teal-800 mt-0.5">Total Leads</p>
+              <p className="text-[10px] sm:text-[11px] font-bold text-teal-800 mt-0.5">Total Leads</p>
             </div>
           </div>
         </div>
@@ -298,9 +298,9 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
       )}
 
       {/* 2. MAIN GRID: PROFILE FORM & PASSWORD FORM */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* PERSONAL DETAILS CARD */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-5">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-5">
           <div className="flex items-center space-x-3 pb-4 border-b border-slate-100">
             <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
               <User className="h-5 w-5" />
@@ -408,7 +408,7 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
               <button
                 type="submit"
                 disabled={isUpdatingProfile}
-                className="px-5 py-2.5 rounded-xl bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold transition-all shadow-sm flex items-center space-x-2 disabled:opacity-60 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center space-x-2 disabled:opacity-60 cursor-pointer"
               >
                 {isUpdatingProfile ? (
                   <>
@@ -427,7 +427,7 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
         </div>
 
         {/* SECURITY & PASSWORD CARD */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs space-y-5">
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs space-y-5">
           <div className="flex items-center space-x-3 pb-4 border-b border-slate-100">
             <div className="h-10 w-10 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 flex items-center justify-center shrink-0">
               <KeyRound className="h-5 w-5" />
@@ -524,7 +524,7 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
               <button
                 type="submit"
                 disabled={isChangingPass}
-                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center space-x-2 disabled:opacity-60 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center space-x-2 disabled:opacity-60 cursor-pointer"
               >
                 {isChangingPass ? (
                   <>

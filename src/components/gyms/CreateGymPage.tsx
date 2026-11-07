@@ -370,32 +370,32 @@ export function CreateGymPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-16 font-sans">
       {/* 1. TOP BREADCRUMB & HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
           <button
             type="button"
             onClick={() => navigate('/gyms')}
-            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs"
+            className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-slate-900 transition-colors cursor-pointer shadow-xs shrink-0"
             title="Return to My Gyms"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
-          <div>
-            <div className="flex items-center space-x-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-2 text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider truncate">
               <span>My Gyms</span>
               <span>/</span>
-              <span className="text-slate-700">Create New Gym</span>
+              <span className="text-slate-700 truncate">Create New Gym</span>
             </div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center space-x-2">
-              <span>Register New Fitness Center</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E6F9F2] text-[#00A389]">
+            <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight flex items-center space-x-2 truncate">
+              <span className="truncate">Register New Fitness Center</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#E6F9F2] text-[#00A389] shrink-0">
                 New Listing
               </span>
             </h1>
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 self-start sm:self-auto">
           <button
             type="button"
             onClick={() => navigate('/gyms')}
@@ -439,7 +439,7 @@ export function CreateGymPage() {
         {/* ============================================================== */}
         <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
           {/* Card Header Bar */}
-          <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
             <div className="flex items-center space-x-3.5">
               <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
                 <Building2 className="h-5 w-5" />
@@ -458,7 +458,7 @@ export function CreateGymPage() {
             </div>
 
             {/* Status Selector */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 self-start sm:self-auto">
               <span className="text-xs font-bold text-slate-500">Listing Status:</span>
               <div className="inline-flex p-1 bg-slate-100 rounded-xl">
                 <button
@@ -488,7 +488,7 @@ export function CreateGymPage() {
           </div>
 
           {/* Form Body */}
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
             {/* Grid 1: Name, Phone, City, Address */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="sm:col-span-2 space-y-1.5">
@@ -899,7 +899,7 @@ export function CreateGymPage() {
         {/* ============================================================== */}
         <div className="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
           {/* Header */}
-          <div className="px-6 py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 bg-gradient-to-r from-white via-white to-slate-50/60">
             <div className="flex items-center space-x-3.5">
               <div className="h-10 w-10 rounded-xl bg-teal-50 border border-teal-100 text-[#00A389] flex items-center justify-center shrink-0">
                 <ImageIcon className="h-5 w-5" />
@@ -922,7 +922,7 @@ export function CreateGymPage() {
             </span>
           </div>
 
-          <div className="p-6 sm:p-8 space-y-6">
+          <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
             {/* Direct S3 Upload Dropzone / Button */}
             <div className="p-6 border-2 border-dashed border-teal-200 rounded-2xl bg-teal-50/30 hover:bg-teal-50/60 transition-colors flex flex-col items-center justify-center text-center space-y-3">
               <input
@@ -1069,11 +1069,11 @@ export function CreateGymPage() {
         {/* ============================================================== */}
         {/* BOTTOM ACTION BAR                                              */}
         {/* ============================================================== */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-2 text-slate-500 text-xs">
-            <ShieldCheck className="h-4 w-4 text-[#00A389]" />
-            <span>
-              Your new listing will be saved as{' '}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3.5 sm:gap-4">
+          <div className="flex items-center space-x-2 text-slate-500 text-xs w-full sm:w-auto">
+            <ShieldCheck className="h-4 w-4 text-[#00A389] shrink-0" />
+            <span className="truncate">
+              Saved as{' '}
               <strong className="text-slate-900">
                 {status === 'APPROVED' ? 'Live on GYMON' : 'Draft Mode'}
               </strong>
@@ -1084,14 +1084,14 @@ export function CreateGymPage() {
             <button
               type="button"
               onClick={() => navigate('/gyms')}
-              className="w-full sm:w-auto px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center"
+              className="flex-1 sm:flex-initial px-5 py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer text-center"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isUploadingFiles}
-              className="w-full sm:w-auto px-8 py-2.5 bg-gradient-to-r from-[#00A389] to-[#00C49F] hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md shadow-[#00A389]/20 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-initial px-6 sm:px-8 py-2.5 bg-gradient-to-r from-[#00A389] to-[#00C49F] hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md shadow-[#00A389]/20 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin text-white" />
