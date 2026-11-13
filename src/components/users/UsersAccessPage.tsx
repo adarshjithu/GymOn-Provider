@@ -811,7 +811,13 @@ export function UsersAccessPage() {
                         <div className="space-x-2 font-semibold">
                           <button
                             type="button"
-                            onClick={() => setAddSelectedGymIds(gyms.map((g) => g._id || g.id))}
+                            onClick={() =>
+                              setAddSelectedGymIds(
+                                gyms
+                                  .map((g) => g._id || g.id)
+                                  .filter((id): id is string => typeof id === 'string' && id.length > 0)
+                              )
+                            }
                             className="text-[#00A389] hover:underline cursor-pointer"
                           >
                             Select All
@@ -836,6 +842,7 @@ export function UsersAccessPage() {
                       <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
                         {gyms.map((gym) => {
                           const gId = gym._id || gym.id;
+                          if (!gId) return null;
                           const isChecked = addSelectedGymIds.includes(gId);
                           return (
                             <label
@@ -851,7 +858,7 @@ export function UsersAccessPage() {
                                 checked={isChecked}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setAddSelectedGymIds((prev) => [...prev, gId]);
+                                    setAddSelectedGymIds((prev) => (prev.includes(gId) ? prev : [...prev, gId]));
                                   } else {
                                     setAddSelectedGymIds((prev) => prev.filter((id) => id !== gId));
                                   }
@@ -1115,7 +1122,13 @@ export function UsersAccessPage() {
                         <div className="space-x-2 font-semibold">
                           <button
                             type="button"
-                            onClick={() => setEditSelectedGymIds(gyms.map((g) => g._id || g.id))}
+                            onClick={() =>
+                              setEditSelectedGymIds(
+                                gyms
+                                  .map((g) => g._id || g.id)
+                                  .filter((id): id is string => typeof id === 'string' && id.length > 0)
+                              )
+                            }
                             className="text-[#00A389] hover:underline cursor-pointer"
                           >
                             Select All
@@ -1140,6 +1153,7 @@ export function UsersAccessPage() {
                       <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
                         {gyms.map((gym) => {
                           const gId = gym._id || gym.id;
+                          if (!gId) return null;
                           const isChecked = editSelectedGymIds.includes(gId);
                           return (
                             <label
@@ -1155,7 +1169,7 @@ export function UsersAccessPage() {
                                 checked={isChecked}
                                 onChange={(e) => {
                                   if (e.target.checked) {
-                                    setEditSelectedGymIds((prev) => [...prev, gId]);
+                                    setEditSelectedGymIds((prev) => (prev.includes(gId) ? prev : [...prev, gId]));
                                   } else {
                                     setEditSelectedGymIds((prev) => prev.filter((id) => id !== gId));
                                   }

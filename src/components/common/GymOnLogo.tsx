@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface GymOnLogoProps {
   size?: 'sm' | 'md' | 'lg';
   subtitle?: string;
