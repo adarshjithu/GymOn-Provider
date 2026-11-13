@@ -234,7 +234,7 @@ export function ProfilePage({ onLogout, onNavigateGym, onNavigateGyms }: Profile
                 </h2>
                 <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Verified Provider</span>
+         
                 </span>
                 <span className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-sky-50 text-sky-700 border border-sky-100">
                   <span className="h-1.5 w-1.5 rounded-full bg-sky-500 animate-pulse" />

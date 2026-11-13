@@ -33,6 +33,8 @@ export interface ProviderUser {
   role?: 'provider' | 'sub_provider' | 'admin';
   parentProvider?: string;
   permissions?: SubProviderPermissions;
+  hasAllGymsAccess?: boolean;
+  assignedGyms?: any[];
   gymName?: string;
   isActive?: boolean;
 }
@@ -46,6 +48,8 @@ export interface SubProviderItem {
   role: 'sub_provider';
   parentProvider: string;
   permissions: SubProviderPermissions;
+  hasAllGymsAccess?: boolean;
+  assignedGyms?: any[];
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -57,6 +61,8 @@ export interface CreateSubProviderPayload {
   phone: string;
   password: string;
   permissions?: Partial<SubProviderPermissions>;
+  hasAllGymsAccess?: boolean;
+  assignedGyms?: string[];
 }
 
 export interface UpdateSubProviderPayload {
@@ -64,6 +70,8 @@ export interface UpdateSubProviderPayload {
   phone?: string;
   isActive?: boolean;
   permissions?: Partial<SubProviderPermissions>;
+  hasAllGymsAccess?: boolean;
+  assignedGyms?: string[];
 }
 
 export interface ProviderProfile extends ProviderUser {
@@ -110,9 +118,16 @@ export interface IOpeningHour {
   open: string;
   close: string;
   isClosed?: boolean;
+  slotName?: string;
 }
 
 export type GymStatus = 'APPROVED' | 'PENDING_APPROVAL' | 'DRAFT' | 'REJECTED' | 'Live' | 'Draft' | 'Inactive' | 'Pending';
+
+export interface GymDescriptionTemplate {
+  id: string;
+  templateId: number;
+  description: string;
+}
 
 export interface CreateGymPayload {
   gymName: string;
@@ -123,6 +138,7 @@ export interface CreateGymPayload {
   monthlyMembershipPrice?: number;
   threeMonthMembershipPrice?: number;
   description?: string;
+  descriptionTemplateId?: number | string;
   facilities?: string[];
   photos?: string[];
   openingHours?: IOpeningHour[];
@@ -188,6 +204,10 @@ export interface CustomerLeadItem {
   provider?: string;
   customerName: string;
   customerPhone: string;
+  originalPhone?: string;
+  editedPhone?: string;
+  isPhoneEdited?: boolean;
+  phoneEditedAt?: string;
   customerEmail?: string;
   message?: string;
   source?: string;

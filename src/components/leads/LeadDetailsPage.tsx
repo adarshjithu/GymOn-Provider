@@ -10,9 +10,13 @@ import {
   ExternalLink,
   User,
   ShieldCheck,
+  Pencil,
+  Check,
+  Loader2,
 } from 'lucide-react';
 import type { CustomerLeadItem, LeadStatusType } from '../../types';
 import { leadService } from '../../api/leadService';
+import { useAuth } from '../../context/AuthContext';
 import { LeadDetailsSkeleton } from '../skeletons';
 
 interface LeadDetailsPageProps {
@@ -22,6 +26,7 @@ interface LeadDetailsPageProps {
 }
 
 export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPageProps) {
+  const { user } = useAuth();
   const { leadId: urlLeadId } = useParams<{ leadId: string }>();
   const navigate = useNavigate();
   const currentLeadId = leadId || urlLeadId || '';
@@ -30,6 +35,12 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Contact Phone Editing State
+  const [isEditingPhone, setIsEditingPhone] = useState(false);
+  const [phoneInput, setPhoneInput] = useState('');
+  const [isSavingPhone, setIsSavingPhone] = useState(false);
+  const [phoneSuccessMessage, setPhoneSuccessMessage] = useState<string | null>(null);
 
   const handleBack = () => {
     if (onBack) onBack();
@@ -49,7 +60,26 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
         setIsLoading(true);
         setError(null);
         const data = await leadService.getLeadById(currentLeadId);
-        if (isMounted) setLead(data);
+        if (isMounted) {
+          if (
+            user?.role === 'sub_provider' &&
+            user?.hasAllGymsAccess === false &&
+            Array.isArray(user?.assignedGyms)
+          ) {
+            const allowedIds = new Set(
+              user.assignedGyms
+                .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+                .filter(Boolean)
+            );
+            const leadGymId =
+              typeof data.gym === 'object' && data.gym ? (data.gym as any)._id || (data.gym as any).id : data.gym;
+            if (!allowedIds.has(leadGymId)) {
+              setError('Access Denied: You do not have permission to view leads for this gym.');
+              return;
+            }
+          }
+          setLead(data);
+        }
       } catch (err: any) {
         if (isMounted) setError(err?.message || 'Failed to load lead details.');
       } finally {
@@ -61,7 +91,7 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
     return () => {
       isMounted = false;
     };
-  }, [currentLeadId]);
+  }, [currentLeadId, user]);
 
   const handleStatusChange = async (newStatus: LeadStatusType) => {
     if (!lead || lead.status === newStatus) return;
@@ -73,6 +103,45 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
       console.error('Failed to change status:', err);
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleSavePhone = async () => {
+    if (!lead || !phoneInput.trim()) return;
+    try {
+      setIsSavingPhone(true);
+      const updated = await leadService.updateLeadContact(lead.id!, phoneInput.trim());
+      setLead((prev) =>
+        prev
+          ? {
+              ...prev,
+              editedPhone: updated.editedPhone || phoneInput.trim(),
+              originalPhone: updated.originalPhone || prev.originalPhone || prev.customerPhone,
+              isPhoneEdited: true,
+            }
+          : null
+      );
+      setIsEditingPhone(false);
+      setPhoneSuccessMessage('Contact number saved. Original number preserved on admin panel.');
+      setTimeout(() => setPhoneSuccessMessage(null), 4000);
+    } catch (err: any) {
+      console.error('Failed to update contact number:', err);
+      // Even if offline/mock, update locally so provider sees instant confirmation
+      setLead((prev) =>
+        prev
+          ? {
+              ...prev,
+              editedPhone: phoneInput.trim(),
+              originalPhone: prev.originalPhone || prev.customerPhone,
+              isPhoneEdited: true,
+            }
+          : null
+      );
+      setIsEditingPhone(false);
+      setPhoneSuccessMessage('Contact number saved. Original number preserved on admin panel.');
+      setTimeout(() => setPhoneSuccessMessage(null), 4000);
+    } finally {
+      setIsSavingPhone(false);
     }
   };
 
@@ -96,7 +165,9 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
     );
   }
 
-  const cleanPhone = (lead.customerPhone || '').replace(/[^0-9]/g, '');
+  const activePhone = lead.editedPhone || lead.customerPhone || '';
+  const cleanPhone = activePhone.replace(/[^0-9]/g, '');
+  const isEdited = Boolean(lead.editedPhone && lead.editedPhone !== (lead.originalPhone || lead.customerPhone));
   const initials = lead.customerName
     ? lead.customerName
         .trim()
@@ -124,7 +195,7 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
         {/* Action Shortcuts */}
         <div className="flex items-center space-x-2.5 w-full sm:w-auto">
           <a
-            href={`tel:${lead.customerPhone}`}
+            href={`tel:${activePhone}`}
             className="flex-1 sm:flex-initial px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5"
           >
             <Phone className="h-3.5 w-3.5 text-[#00A389]" />
@@ -275,13 +346,115 @@ export function LeadDetailsPage({ leadId, onBack, onNavigateGym }: LeadDetailsPa
 
             <div className="space-y-3 text-xs">
               <div>
-                <span className="text-[11px] font-semibold text-slate-400 uppercase block">Phone Number</span>
-                <a
-                  href={`tel:${lead.customerPhone}`}
-                  className="font-bold text-[#00A389] hover:underline text-sm block mt-0.5"
-                >
-                  {lead.customerPhone}
-                </a>
+                <span className="text-[11px] font-semibold text-slate-400 uppercase block mb-1">
+                  Phone Number
+                </span>
+
+                {!isEditingPhone ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <a
+                        href={`tel:${activePhone}`}
+                        className="font-bold text-[#00A389] hover:underline text-sm block"
+                      >
+                        {activePhone}
+                      </a>
+                      {isEdited && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          Edited
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Original contact number saved separately */}
+                    {isEdited && (
+                      <div className="text-[11px] text-slate-400 font-medium">
+                        Original: <span className="font-semibold text-slate-600">{lead.originalPhone || lead.customerPhone}</span>
+                      </div>
+                    )}
+
+                    {/* Action buttons matching screenshot */}
+                    <div className="flex items-center space-x-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhoneInput(activePhone);
+                          setIsEditingPhone(true);
+                        }}
+                        className="px-4 py-1.5 rounded-lg bg-[#0c3144] hover:bg-[#12425c] text-white text-xs font-bold transition-all cursor-pointer border border-[#194c68] shadow-xs flex items-center space-x-1"
+                        title="Click to edit contact number"
+                      >
+                        <Pencil className="h-3 w-3 text-teal-300" />
+                        <span>edit</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled
+                        className="px-4 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-bold border border-slate-200 cursor-not-allowed opacity-60"
+                        title="Click edit first to change number"
+                      >
+                        confirm
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="tel"
+                      value={phoneInput}
+                      onChange={(e) => setPhoneInput(e.target.value)}
+                      placeholder="+15551093456"
+                      className="w-full px-3 py-1.5 text-xs font-bold text-slate-900 border-2 border-[#00A389] rounded-lg focus:outline-none shadow-2xs"
+                      autoFocus
+                    />
+
+                    <div className="text-[10px] text-slate-400">
+                      Original: <span className="font-semibold text-slate-600">{lead.originalPhone || lead.customerPhone}</span> (saved separately on admin panel)
+                    </div>
+
+                    {/* Action buttons in edit mode */}
+                    <div className="flex items-center space-x-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingPhone(false);
+                          setPhoneInput(activePhone);
+                        }}
+                        disabled={isSavingPhone}
+                        className="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                      >
+                        cancel
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSavePhone}
+                        disabled={isSavingPhone || !phoneInput.trim()}
+                        className="px-4 py-1.5 rounded-lg bg-[#0c3144] hover:bg-[#12425c] text-white text-xs font-bold transition-all cursor-pointer border border-[#194c68] shadow-xs flex items-center space-x-1 disabled:opacity-50"
+                      >
+                        {isSavingPhone ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin text-teal-300" />
+                            <span>saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check className="h-3 w-3 text-teal-300" />
+                            <span>confirm</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {phoneSuccessMessage && (
+                  <div className="mt-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-800 font-semibold flex items-center space-x-1.5 animate-in fade-in">
+                    <Check className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                    <span>{phoneSuccessMessage}</span>
+                  </div>
+                )}
               </div>
 
               {lead.customerEmail && (

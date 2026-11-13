@@ -19,10 +19,11 @@ import {
   Sparkles,
   AlertCircle,
 } from 'lucide-react';
-import type { GymItem } from '../../types';
+import type { GymItem, CustomerLeadItem } from '../../types';
 import { gymService } from '../../api/gymService';
+import { leadService } from '../../api/leadService';
+import { calculateNearbyAveragePrices } from '../../utils/geoUtils';
 import { useAuth } from '../../context/AuthContext';
-import { CreateGymModal } from './CreateGymModal';
 import { MyGymsSkeleton, MyGymsCardsSkeleton } from '../skeletons';
 
 interface MyGymsPageProps {
@@ -47,21 +48,46 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
   };
 
   const [gyms, setGyms] = useState<GymItem[]>([]);
+  const [leads, setLeads] = useState<CustomerLeadItem[]>([]);
+  const [platformGyms, setPlatformGyms] = useState<GymItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Live' | 'Pending' | 'Draft' | 'Inactive'>('All');
   const [sortBy, setSortBy] = useState<'recently' | 'price-asc' | 'price-desc' | 'name'>('recently');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
   const fetchGyms = async () => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await gymService.getProviderGyms(user?.id || user?._id);
-      setGyms(data);
+      const [gymsData, leadsData, allGymsData] = await Promise.all([
+        gymService.getProviderGyms(user?.id || user?._id).catch((err) => {
+          console.error('Failed to load provider gyms:', err);
+          return [] as GymItem[];
+        }),
+        leadService.getLeads({ limit: 100 }).catch((err) => {
+          console.error('Failed to load leads:', err);
+          return { leads: [] as CustomerLeadItem[] };
+        }),
+        gymService.getAllPlatformGyms().catch((err) => {
+          console.error('Failed to load platform gyms:', err);
+          return [] as GymItem[];
+        }),
+      ]);
+
+      let resolvedGyms = Array.isArray(gymsData) ? gymsData : [];
+      if (user?.role === 'sub_provider' && user?.hasAllGymsAccess === false && Array.isArray(user?.assignedGyms)) {
+        const allowedIds = new Set(
+          user.assignedGyms.map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g)).filter(Boolean)
+        );
+        resolvedGyms = resolvedGyms.filter((g) => allowedIds.has(g._id || g.id));
+      }
+
+      setGyms(resolvedGyms);
+      setLeads(Array.isArray(leadsData?.leads) ? leadsData.leads : []);
+      setPlatformGyms(Array.isArray(allGymsData) ? allGymsData : []);
     } catch (err: any) {
       console.error('Failed to load gyms:', err);
       setError(err?.message || 'Unable to connect to the backend server.');
@@ -74,6 +100,49 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
   useEffect(() => {
     fetchGyms();
   }, [user]);
+
+  // Current Month Helper
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const isCreatedThisMonth = (dateStr?: string | Date) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return false;
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  };
+
+  // Helper to compute nearby 3 km average price for a specific gym
+  const getGymNearbyAvgPrice = (gym: GymItem) => {
+    const lat = gym.gpsLocation?.latitude;
+    const lng = gym.gpsLocation?.longitude;
+    const pool = platformGyms.length > 0 ? platformGyms : gyms;
+    const stats = calculateNearbyAveragePrices(pool, lat, lng, 3);
+    if (stats && stats.dayPass > 0) return stats.dayPass;
+    return gym.dayPassPrice || 150;
+  };
+
+  // Helper to compute this month's revenue for a specific gym (from CLOSED leads)
+  const getGymThisMonthRevenue = (gym: GymItem) => {
+    const gymId = gym._id || gym.id;
+    const gymClosedLeads = leads.filter((l) => {
+      if (!isCreatedThisMonth(l.createdAt)) return false;
+      if (l.status !== 'CLOSED') return false;
+      const leadGymId = typeof l.gym === 'object' ? l.gym?._id || l.gym?.id : l.gym;
+      return (
+        leadGymId === gymId ||
+        l.gymSlug === gym.slug ||
+        (l.gymName && gym.gymName && l.gymName.toLowerCase() === gym.gymName.toLowerCase())
+      );
+    });
+
+    return gymClosedLeads.reduce((total, lead) => {
+      const price = Number(lead.dayPassPrice) || Number(gym.dayPassPrice) || 0;
+      const passes = Number(lead.numberOfPasses) || 1;
+      return total + price * passes;
+    }, 0);
+  };
 
   // Compute Stats
   const totalGyms = gyms.length;
@@ -404,7 +473,7 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 sm:gap-6">
           {filteredGyms.map((gym) => {
             const isLive = gym.status === 'Live' || gym.status === 'APPROVED';
             const isPending = gym.status === 'Pending' || gym.status === 'PENDING_APPROVAL';
@@ -414,6 +483,8 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
               gym.photos && gym.photos[0]
                 ? gym.photos[0]
                 : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=800&q=80';
+            const gymRevenue = getGymThisMonthRevenue(gym);
+            const suggestedPrice = getGymNearbyAvgPrice(gym);
 
             return (
               <div
@@ -448,9 +519,10 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                   </div>
 
                   {/* Card Header Body */}
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center space-x-3">
+                  <div className="p-4 sm:p-5 space-y-3">
+                    {/* Row 1: Avatar, Full Name & Location (Left) + More Options (Right) */}
+                    <div className="flex items-start justify-between gap-2.5">
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
                         {/* Circular Logo */}
                         <div
                           className={`h-11 w-11 rounded-full ${avatarStyle.bg} ${avatarStyle.text} border-2 ${avatarStyle.ring} font-black text-sm flex items-center justify-center shrink-0 shadow-xs`}
@@ -458,16 +530,17 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                           {initials}
                         </div>
 
-                        <div>
+                        <div className="min-w-0 flex-1">
                           <button
                             onClick={() => handleViewGym(gym.slug)}
-                            className="text-base font-bold text-slate-900 hover:text-[#00A389] transition-colors text-left line-clamp-1 cursor-pointer"
+                            className="text-base font-bold text-slate-900 hover:text-[#00A389] transition-colors text-left line-clamp-1 cursor-pointer block truncate w-full"
+                            title={gym.gymName}
                           >
                             {gym.gymName}
                           </button>
-                          <div className="flex items-center text-xs text-slate-500 font-medium mt-0.5">
+                          <div className="flex items-center text-xs text-slate-500 font-medium mt-0.5 truncate">
                             <MapPin className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
-                            <span className="truncate max-w-[170px]">{gym.city || gym.address}</span>
+                            <span className="truncate">{gym.city || gym.address}</span>
                           </div>
                         </div>
                       </div>
@@ -478,27 +551,69 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                           e.stopPropagation();
                           handleViewGym(gym.slug);
                         }}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
                         title="More options"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </button>
                     </div>
 
-                    {/* Price Line */}
-                    <div className="pt-1">
-                      {gym.dayPassPrice > 0 ? (
-                        <div className="text-sm font-black text-slate-900">
-                          ₹{gym.dayPassPrice}
-                          <span className="text-xs text-slate-500 font-medium ml-1">
-                            / day pass
-                          </span>
+                    {/* Row 2: Price Line */}
+                    <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                      <div className="min-w-0">
+                        {gym.dayPassPrice > 0 ? (
+                          <div className="flex items-baseline">
+                            <span className="text-base font-black text-slate-900">
+                              ₹{gym.dayPassPrice}
+                            </span>
+                            <span className="text-xs text-slate-500 font-medium ml-1 whitespace-nowrap">
+                              / day pass
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-400 font-medium italic">
+                            Not published yet
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stacked "One-by-One" Buttons: This Month Total Revenue & Suggested Price */}
+                    <div className="space-y-2 pt-0.5">
+                      {/* Button 1: This Month Total Revenue */}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewLeads(gym.slug);
+                        }}
+                        className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#F0FAF7] hover:bg-[#E6F9F2] text-slate-800 border border-[#00A389]/25 shadow-2xs transition-colors cursor-pointer"
+                        title="Total revenue earned by this gym this month from closed customer leads (Click to view leads)"
+                      >
+                        <span className="text-[11px] font-bold text-[#007D69] uppercase tracking-wider whitespace-nowrap">
+                          THIS MONTH TOTAL REVENUE
+                        </span>
+                        <span className="text-xs sm:text-sm font-black text-slate-900 ml-2 whitespace-nowrap">
+                          ₹{gymRevenue.toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      {/* Button 2: Suggested Price */}
+                      <div
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClick(gym, e);
+                        }}
+                        className="w-full flex items-center justify-between px-3.5 py-2 rounded-xl bg-[#F0FAF7] hover:bg-[#E6F9F2] text-slate-800 border border-[#00A389]/25 shadow-2xs transition-colors cursor-pointer"
+                        title="Suggested average price based on nearest 3 km gyms (Click to update pricing in Edit)"
+                      >
+                        <div className="flex items-center space-x-1.5 text-xs font-bold text-[#007D69] whitespace-nowrap">
+                          <Sparkles className="h-3.5 w-3.5 text-[#00A389] shrink-0" />
+                          <span>Suggested price:</span>
                         </div>
-                      ) : (
-                        <div className="text-xs text-slate-400 font-medium italic">
-                          Not published yet
-                        </div>
-                      )}
+                        <span className="text-xs sm:text-sm font-black text-slate-900 ml-2 whitespace-nowrap">
+                          ₹{suggestedPrice}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -556,7 +671,9 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                 <tr>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Gym Name</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Location</th>
-                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Day Pass Price</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Day Pass</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Suggested Price</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">This Month Revenue</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Last Updated</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
@@ -568,6 +685,8 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                   const isPending = gym.status === 'Pending' || gym.status === 'PENDING_APPROVAL';
                   const avatarStyle = getAvatarStyle(gym.gymName);
                   const initials = getInitials(gym.gymName);
+                  const gymRevenue = getGymThisMonthRevenue(gym);
+                  const suggestedPrice = getGymNearbyAvgPrice(gym);
 
                   return (
                     <tr
@@ -599,6 +718,21 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
                       {/* Day Pass Price */}
                       <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap font-bold text-slate-900">
                         {gym.dayPassPrice > 0 ? `₹${gym.dayPassPrice}` : '—'}
+                      </td>
+
+                      {/* Suggested Price */}
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-teal-50 border border-teal-200/70 text-[#00A389] font-bold text-xs">
+                          <Sparkles className="h-3 w-3" />
+                          <span>₹{suggestedPrice}</span>
+                        </span>
+                      </td>
+
+                      {/* This Month Revenue */}
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap font-bold text-emerald-800">
+                        <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/70 text-xs">
+                          ₹{gymRevenue.toLocaleString('en-IN')}
+                        </span>
                       </td>
 
                       {/* Status */}
@@ -685,17 +819,6 @@ export function MyGymsPage({ onViewDetails, onAddNewGym, onEditGym, onViewGymLea
           </div>
         </div>
       )}
-
-      {/* Create Gym Modal */}
-      <CreateGymModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        providerId={user?.id || user?._id}
-        onGymCreated={(newGym) => {
-          setGyms((prev) => [newGym, ...prev]);
-          setSuccessBanner(`Gym "${newGym.gymName}" has been registered and submitted for admin review!`);
-        }}
-      />
     </div>
   );
 }

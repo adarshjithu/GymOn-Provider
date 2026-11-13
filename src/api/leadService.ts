@@ -70,6 +70,23 @@ export const leadService = {
       throw new Error(msg);
     }
   },
+
+  /**
+   * Update customer contact number (saved separately from original phone)
+   */
+  updateLeadContact: async (leadId: string, contactNumber: string): Promise<CustomerLeadItem> => {
+    try {
+      const response = await apiClient.patch(`/provider/leads/${leadId}/contact`, { contactNumber });
+      if (response.data?.data) {
+        return normalizeLead(response.data.data);
+      }
+      throw new Error('Failed to update lead contact on server.');
+    } catch (error) {
+      const msg = errorHandler(error);
+      console.error(`API Error in updateLeadContact(${leadId}):`, msg);
+      throw new Error(msg);
+    }
+  },
 };
 
 function normalizeLead(raw: any): CustomerLeadItem {
@@ -83,11 +100,18 @@ function normalizeLead(raw: any): CustomerLeadItem {
       })
     : 'Recently';
 
+  const orig = raw.originalPhone || raw.customerPhone || 'N/A';
+  const edited = raw.editedPhone || '';
+
   return {
     _id: raw._id || raw.id,
     id: raw._id?.toString() || raw.id,
     customerName: raw.customerName || 'Customer',
     customerPhone: raw.customerPhone || 'N/A',
+    originalPhone: orig,
+    editedPhone: edited,
+    isPhoneEdited: Boolean(raw.isPhoneEdited || edited),
+    phoneEditedAt: raw.phoneEditedAt,
     customerEmail: raw.customerEmail || '',
     gym: gymObj,
     gymName: raw.gymName || gymObj?.gymName || 'Gym Partner',

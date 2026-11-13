@@ -24,6 +24,7 @@ import {
 import type { CustomerLeadItem, LeadStatusType, GymItem, PaginationMeta } from '../../types';
 import { leadService } from '../../api/leadService';
 import { gymService } from '../../api/gymService';
+import { useAuth } from '../../context/AuthContext';
 import { CustomerLeadsSkeleton, CustomerLeadsTableSkeleton } from '../skeletons';
 
 interface CustomerLeadsPageProps {
@@ -36,6 +37,7 @@ export function CustomerLeadsPage({
   initialGymSlug,
   onViewLead,
 }: CustomerLeadsPageProps) {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const gymFromUrl = searchParams.get('gym') || initialGymSlug || 'All';
@@ -105,14 +107,27 @@ export function CustomerLeadsPage({
   // Load gyms list for filter dropdown
   useEffect(() => {
     gymService
-      .getProviderGyms()
+      .getProviderGyms(user?.id || user?._id)
       .then((data) => {
-        setGyms(data);
+        let resolved = Array.isArray(data) ? data : [];
+        if (
+          user?.role === 'sub_provider' &&
+          user?.hasAllGymsAccess === false &&
+          Array.isArray(user?.assignedGyms)
+        ) {
+          const allowedIds = new Set(
+            user.assignedGyms
+              .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+              .filter(Boolean)
+          );
+          resolved = resolved.filter((g) => allowedIds.has(g._id || g.id));
+        }
+        setGyms(resolved);
       })
       .catch(() => {
         setGyms([]);
       });
-  }, []);
+  }, [user]);
 
   // Fetch leads strictly from server with search and pagination
   const fetchLeads = async () => {
@@ -127,7 +142,24 @@ export function CustomerLeadsPage({
         limit: itemsPerPage,
       });
 
-      setLeads(result.leads);
+      let fetchedLeads = Array.isArray(result.leads) ? result.leads : [];
+      if (
+        user?.role === 'sub_provider' &&
+        user?.hasAllGymsAccess === false &&
+        Array.isArray(user?.assignedGyms)
+      ) {
+        const allowedIds = new Set(
+          user.assignedGyms
+            .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+            .filter(Boolean)
+        );
+        fetchedLeads = fetchedLeads.filter((lead) => {
+          const leadGymId = typeof lead.gym === 'object' && lead.gym ? (lead.gym as any)._id || (lead.gym as any).id : lead.gym;
+          return allowedIds.has(leadGymId);
+        });
+      }
+
+      setLeads(fetchedLeads);
       setPaginationMeta(result.pagination);
     } catch (err: any) {
       console.error('Error fetching customer leads:', err);
@@ -435,9 +467,7 @@ export function CustomerLeadsPage({
               <thead className="bg-[#F8FAFC] border-b border-slate-200/80 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Customer</th>
-                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Assigned Gym</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Customer Message</th>
-                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Requested Date</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
                 </tr>
@@ -452,71 +482,74 @@ export function CustomerLeadsPage({
                       onClick={() => handleLeadClick(lead.id!)}
                       className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
                     >
-                      {/* Customer Info */}
-                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <div className="flex items-center space-x-3">
-                          <div className="h-10 w-10 rounded-full bg-[#060E1E] text-[#00C49F] font-bold text-xs flex items-center justify-center shrink-0 border border-slate-800">
+                      {/* Customer Info (Avatar + Name + Phone/Email + Gym & Date Underneath) */}
+                      <td className="px-3.5 sm:px-6 py-3.5 sm:py-4">
+                        <div className="flex items-start space-x-3">
+                          <div className="h-10 w-10 rounded-full bg-[#060E1E] text-[#00C49F] font-bold text-xs flex items-center justify-center shrink-0 border border-slate-800 mt-0.5">
                             {initials}
                           </div>
-                          <div>
-                            <span className="font-bold text-slate-900 group-hover:text-[#00A389] transition-colors block">
+                          <div className="min-w-0">
+                            <span className="font-bold text-slate-900 group-hover:text-[#00A389] transition-colors block text-sm">
                               {lead.customerName}
                             </span>
-                            <div className="flex items-center space-x-2 text-[11px] text-slate-500 mt-0.5">
+                            <div className="flex flex-wrap items-center gap-x-2 text-[11px] text-slate-500 mt-0.5">
                               <span className="flex items-center">
                                 <Phone className="h-3 w-3 mr-1 text-slate-400" />
-                                {lead.customerPhone}
+                                <span>{lead.editedPhone || lead.customerPhone}</span>
+                                {lead.editedPhone && lead.editedPhone !== (lead.originalPhone || lead.customerPhone) ? (
+                                  <span className="ml-1.5 px-1 py-0.2 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    Edited
+                                  </span>
+                                ) : null}
                               </span>
                               {lead.customerEmail && (
                                 <>
                                   <span>&bull;</span>
-                                  <span className="flex items-center truncate max-w-[140px]">
+                                  <span className="flex items-center truncate max-w-[180px]">
                                     <Mail className="h-3 w-3 mr-1 text-slate-400" />
                                     {lead.customerEmail}
                                   </span>
                                 </>
                               )}
                             </div>
+
+                            {/* Under user name: Gym Name badge & Date badge */}
+                            <div className="flex flex-wrap items-center gap-2 mt-2">
+                              {/* Gym Name Badge */}
+                              <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-teal-50/80 text-[#007D69] font-bold text-xs border border-teal-200/80 shadow-2xs">
+                                <Building2 className="h-3.5 w-3.5 text-[#00A389] shrink-0" />
+                                <span className="truncate max-w-[200px]">{lead.gymName}</span>
+                                {lead.dayPassPrice ? (
+                                  <span className="text-[10px] text-teal-700/70 font-semibold ml-0.5">
+                                    • ₹{lead.dayPassPrice}
+                                  </span>
+                                ) : null}
+                              </span>
+
+                              {/* Date Badge */}
+                              <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/90 shadow-2xs">
+                                <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <span>{lead.preferredDate || 'Flexible'}</span>
+                                {lead.preferredTime && (
+                                  <span className="text-[10px] text-slate-500 font-normal ml-0.5">
+                                    • {lead.preferredTime}
+                                  </span>
+                                )}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </td>
 
-                      {/* Gym Badge */}
-                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200">
-                          <Building2 className="h-3.5 w-3.5 text-[#00A389]" />
-                          <span>{lead.gymName}</span>
-                        </span>
-                        {lead.dayPassPrice ? (
-                          <p className="text-[10px] text-slate-400 mt-1 font-medium">
-                            ₹{lead.dayPassPrice} / day pass
-                          </p>
-                        ) : null}
-                      </td>
-
                       {/* Customer Message */}
-                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 max-w-sm">
+                      <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 max-w-md">
                         <p className="text-slate-700 line-clamp-2 text-xs leading-relaxed">
                           {lead.message || 'Customer requested day-pass assistance.'}
                         </p>
                       </td>
 
-                      {/* Requested Date */}
-                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-slate-600 font-medium">
-                        <div className="flex items-center space-x-1.5 text-xs text-slate-700 font-semibold">
-                          <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                          <span>{lead.preferredDate || 'Flexible'}</span>
-                        </div>
-                        {lead.preferredTime && (
-                          <div className="flex items-center space-x-1 text-[11px] text-slate-400 mt-0.5">
-                            <Clock className="h-3 w-3" />
-                            <span>{lead.preferredTime}</span>
-                          </div>
-                        )}
-                      </td>
-
                       {/* Status Badge */}
-                      <td className="px-3.5 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                      <td className="px-3.5 sm:px-6 py-3.5 sm:py-4 whitespace-nowrap">
                         {getStatusBadge(lead.status)}
                       </td>
 

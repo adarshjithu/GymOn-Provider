@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   X,
   Building2,
@@ -14,6 +14,7 @@ import {
 import { gymService } from '../../api/gymService';
 import type { GymItem } from '../../types';
 import { LocationPickerMap } from '../common/LocationPickerMap';
+import { calculateNearbyAveragePrices } from '../../utils/geoUtils';
 
 interface CreateGymModalProps {
   isOpen: boolean;
@@ -44,6 +45,23 @@ const PHOTO_PRESETS = [
   { name: 'Lockers & Spa', url: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=1200&q=80' },
 ];
 
+const interpolateGymDescription = (
+  template: string,
+  name: string,
+  addr: string,
+  cityName: string
+): string => {
+  if (!template) return '';
+  const gym = name.trim() || 'our fitness club';
+  const area = addr.trim() || 'your neighborhood';
+  const city = cityName.trim() || 'your city';
+
+  return template
+    .replace(/\{\{\s*gym_name\s*\}\}/gi, gym)
+    .replace(/\{\{\s*area\s*\}\}/gi, area)
+    .replace(/\{\{\s*city\s*\}\}/gi, city);
+};
+
 export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: CreateGymModalProps) {
   const [gymName, setGymName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -55,6 +73,59 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
   const [latitude, setLatitude] = useState('12.9716');
   const [longitude, setLongitude] = useState('77.5946');
   const [description, setDescription] = useState('');
+  const [rawTemplate, setRawTemplate] = useState('');
+  const [templateId, setTemplateId] = useState<number | null>(null);
+  const [isDescriptionManuallyEdited, setIsDescriptionManuallyEdited] = useState(false);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState(false);
+
+  // Fetch an unused description template when modal opens
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    setIsLoadingTemplate(true);
+    gymService
+      .getNextGymDescription()
+      .then((tpl) => {
+        if (!isMounted || !tpl) return;
+        setRawTemplate(tpl.description);
+        setTemplateId(tpl.templateId);
+        setDescription(interpolateGymDescription(tpl.description, gymName, address, city));
+      })
+      .catch((err) => {
+        console.warn('Failed to load initial gym description template:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingTemplate(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  // Dynamically interpolate template as user types name, address, or city
+  useEffect(() => {
+    if (!isDescriptionManuallyEdited && rawTemplate) {
+      setDescription(interpolateGymDescription(rawTemplate, gymName, address, city));
+    }
+  }, [gymName, address, city, rawTemplate, isDescriptionManuallyEdited]);
+
+  const handleSuggestAnotherTemplate = async () => {
+    setIsLoadingTemplate(true);
+    try {
+      const nextTpl = await gymService.getNextGymDescription(templateId || undefined);
+      if (nextTpl) {
+        setRawTemplate(nextTpl.description);
+        setTemplateId(nextTpl.templateId);
+        setIsDescriptionManuallyEdited(false);
+        setDescription(interpolateGymDescription(nextTpl.description, gymName, address, city));
+      }
+    } catch (err) {
+      console.warn('Failed to suggest another template:', err);
+    } finally {
+      setIsLoadingTemplate(false);
+    }
+  };
   const [facilities, setFacilities] = useState<string[]>([
     'Air Conditioning',
     'Free Weights',
@@ -69,46 +140,31 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Average Price Suggestions State
-  const [avgPrices, setAvgPrices] = useState<{
-    dayPass: number;
-    monthly: number;
-    threeMonth: number;
-    count: number;
-  } | null>(null);
+  // Average Price Suggestions State (computed from nearest 3 km gyms)
+  const [platformGyms, setPlatformGyms] = useState<GymItem[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
     let isMounted = true;
 
     gymService
-      .getProviderGyms()
+      .getAllPlatformGyms()
       .then((gyms) => {
         if (!isMounted || !Array.isArray(gyms) || gyms.length === 0) return;
-
-        const dayPasses = gyms.map((g) => Number(g.dayPassPrice)).filter((p) => !isNaN(p) && p > 0);
-        const monthlies = gyms.map((g) => Number(g.monthlyMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
-        const threeMonths = gyms.map((g) => Number(g.threeMonthMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
-
-        const avgDP = dayPasses.length > 0 ? Math.round(dayPasses.reduce((a, b) => a + b, 0) / dayPasses.length) : 25;
-        const avgM = monthlies.length > 0 ? Math.round(monthlies.reduce((a, b) => a + b, 0) / monthlies.length) : 80;
-        const avgTM = threeMonths.length > 0 ? Math.round(threeMonths.reduce((a, b) => a + b, 0) / threeMonths.length) : 220;
-
-        setAvgPrices({
-          dayPass: avgDP,
-          monthly: avgM,
-          threeMonth: avgTM,
-          count: gyms.length,
-        });
+        setPlatformGyms(gyms);
       })
       .catch((err) => {
-        console.error('Failed to load existing gyms for price averages:', err);
+        console.error('Failed to load platform gyms for price averages:', err);
       });
 
     return () => {
       isMounted = false;
     };
   }, [isOpen]);
+
+  const avgPrices = useMemo(() => {
+    return calculateNearbyAveragePrices(platformGyms, latitude, longitude, 3);
+  }, [platformGyms, latitude, longitude]);
 
   const handleApplyAllAverages = () => {
     if (!avgPrices) return;
@@ -178,6 +234,7 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
         monthlyMembershipPrice: monthlyPrice ? Number(monthlyPrice) : undefined,
         threeMonthMembershipPrice: threeMonthPrice ? Number(threeMonthPrice) : undefined,
         description: description.trim(),
+        descriptionTemplateId: templateId || undefined,
         facilities,
         photos: selectedPhotos,
         gpsLocation: {
@@ -345,8 +402,8 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
               </h4>
               {avgPrices && (
                 <div className="flex items-center space-x-2">
-                  <span className="text-[10px] text-slate-400 font-medium hidden sm:inline">
-                    Avg of {avgPrices.count} gym{avgPrices.count > 1 ? 's' : ''}
+                  <span className="text-[10px] text-teal-800 font-semibold hidden sm:inline bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                    {avgPrices.label}
                   </span>
                   <button
                     type="button"
@@ -540,17 +597,35 @@ export function CreateGymModal({ isOpen, onClose, onGymCreated, providerId }: Cr
           </div>
 
           {/* Description */}
-          <div className="space-y-2 pt-2 border-t border-slate-100">
-            <label className="text-xs font-semibold text-slate-700 block">
-              Gym Description & Highlights
-            </label>
+          <div className="space-y-1.5 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-slate-700 block">
+                Gym Description & Highlights
+              </label>
+              <button
+                type="button"
+                onClick={handleSuggestAnotherTemplate}
+                disabled={isLoadingTemplate}
+                className="inline-flex items-center space-x-1 text-[11px] font-semibold text-[#00A389] hover:text-[#008770] disabled:opacity-50 transition-colors px-2 py-0.5 rounded-md hover:bg-[#00A389]/10"
+                title="Generate another unused description template"
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${isLoadingTemplate ? 'animate-spin' : ''}`} />
+                <span>{isLoadingTemplate ? 'Loading...' : 'Suggest Another'}</span>
+              </button>
+            </div>
             <textarea
               rows={2}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setIsDescriptionManuallyEdited(true);
+              }}
               placeholder="Modern fitness center equipped with imported equipment, certified trainers, and clean locker rooms..."
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#00C49F] focus:bg-white transition-all"
             />
+            <p className="text-[11px] text-slate-400">
+              ✨ Pre-filled with an unused template personalized to your gym. Editable at any time.
+            </p>
           </div>
 
           {/* Photos */}

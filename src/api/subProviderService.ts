@@ -11,6 +11,8 @@ export const subProviderService = {
         return list.map((item: any) => ({
           ...item,
           id: item._id || item.id,
+          hasAllGymsAccess: item.hasAllGymsAccess !== undefined ? item.hasAllGymsAccess : true,
+          assignedGyms: Array.isArray(item.assignedGyms) ? item.assignedGyms : [],
           permissions: item.permissions || {
             canCreateGym: false,
             canEditGym: true,

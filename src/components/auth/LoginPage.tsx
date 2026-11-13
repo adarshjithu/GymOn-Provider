@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
-import { Dumbbell, Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { GymOnLogo, GymOnIcon } from "../common/GymOnLogo";
 
 interface LoginPageProps {
   onSuccess?: () => void;
@@ -57,26 +58,13 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
       {/* Top Header Logo */}
       <header className="max-w-7xl w-full mx-auto flex items-center justify-between z-10">
-        <div className="flex items-center space-x-3 select-none">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] flex items-center justify-center shadow-lg shadow-[#00C49F]/20 shrink-0">
-            <Dumbbell className="h-5 w-5 text-white stroke-[2.5]" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-1">
-              <span className="text-2xl font-black tracking-tight text-white">GYM</span>
-              <span className="text-2xl font-black tracking-tight text-[#00C49F]">ON</span>
-            </div>
-            <p className="text-[9px] font-bold tracking-[0.2em] text-[#00C49F] uppercase -mt-1">
-              PROVIDER PORTAL
-            </p>
-          </div>
-        </div>
+        <GymOnLogo size="lg" />
 
         <div className="text-xs text-slate-400 font-medium hidden sm:block">
           Need partner assistance?{" "}
           <a
             href="mailto:support@gymon.com"
-            className="text-[#00C49F] hover:underline cursor-pointer"
+            className="text-[#00D7DE] hover:underline cursor-pointer"
           >
             Partner Support
           </a>
@@ -88,9 +76,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
         <div className="bg-[#0B1727]/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-black/60">
           {/* Card Header */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-[#00A389]/10 border border-[#00A389]/30 text-[#00C49F] mb-3 shadow-inner">
-              <Dumbbell className="h-6 w-6" />
-            </div>
+            <GymOnIcon className="h-14 w-14 mx-auto mb-3" />
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
               Provider Sign In
             </h2>
@@ -240,7 +226,7 @@ export function LoginPage({ onSuccess }: LoginPageProps) {
 
       {/* Footer */}
       <footer className="max-w-7xl w-full mx-auto text-center text-xs text-slate-500 z-10 py-2">
-        &copy; {new Date().getFullYear()} GYM ON Provider Portal &bull; All Rights Reserved
+        &copy; {new Date().getFullYear()} GymOn Provider Portal &bull; All Rights Reserved
       </footer>
     </div>
   );

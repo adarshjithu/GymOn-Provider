@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -12,19 +12,20 @@ import {
   Plus,
   Star,
   Check,
-  Clock,
   Sparkles,
   DollarSign,
-  Copy,
   ExternalLink,
   ShieldCheck,
   Upload,
+  FileText,
 } from 'lucide-react';
 import type { IOpeningHour, UpdateGymPayload } from '../../types';
 import { gymService } from '../../api/gymService';
 import { useAuth } from '../../context/AuthContext';
 import { EditGymSkeleton } from '../skeletons';
 import { LocationPickerMap } from '../common/LocationPickerMap';
+import { OperatingScheduleManager } from '../common/OperatingScheduleManager';
+import { calculateNearbyAveragePrices } from '../../utils/geoUtils';
 
 const POPULAR_FACILITIES = [
   'Cardio Equipment',
@@ -80,6 +81,27 @@ export function EditGymPage() {
   const [threeMonthPrice, setThreeMonthPrice] = useState<string>('');
   const [latitude, setLatitude] = useState<string>('');
   const [longitude, setLongitude] = useState<string>('');
+  const [platformGyms, setPlatformGyms] = useState<any[]>([]);
+
+  useEffect(() => {
+    gymService.getAllPlatformGyms().then((res) => {
+      if (Array.isArray(res) && res.length > 0) {
+        setPlatformGyms(res);
+      }
+    });
+  }, []);
+
+  // Compute nearby 3km average prices dynamically
+  const avgPrices = useMemo(() => {
+    return calculateNearbyAveragePrices(platformGyms, latitude, longitude, 3);
+  }, [platformGyms, latitude, longitude]);
+
+  const handleApplyAllAverages = () => {
+    if (!avgPrices) return;
+    setDayPassPrice(String(avgPrices.dayPass));
+    setMonthlyPrice(String(avgPrices.monthly));
+    setThreeMonthPrice(String(avgPrices.threeMonth));
+  };
   const [description, setDescription] = useState<string>('');
   const [facilities, setFacilities] = useState<string[]>([]);
   const [openingHours, setOpeningHours] = useState<IOpeningHour[]>([]);
@@ -118,6 +140,24 @@ export function EditGymPage() {
       .getGymBySlug(urlSlug)
       .then((gym) => {
         if (!isMounted) return;
+
+        // Restriction check for sub-providers
+        if (isSubProvider && user?.hasAllGymsAccess === false && Array.isArray(user?.assignedGyms)) {
+          const allowedIds = new Set(
+            user.assignedGyms
+              .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+              .filter(Boolean)
+          );
+          if (!allowedIds.has(gym._id || gym.id)) {
+            setFetchError('Access Denied: You do not have permission to view or edit this gym.');
+            return;
+          }
+        }
+
+        if (!canEditGym) {
+          setFetchError('Access Denied: Your account does not have permission to edit gyms.');
+          return;
+        }
 
         setGymName(gym.gymName || '');
         setPhoneNumber(gym.phoneNumber || '');
@@ -166,36 +206,6 @@ export function EditGymPage() {
   const toggleFacility = (facility: string) => {
     setFacilities((prev) =>
       prev.includes(facility) ? prev.filter((f) => f !== facility) : [...prev, facility]
-    );
-  };
-
-  // Hour change
-  const handleHourChange = (
-    index: number,
-    field: keyof IOpeningHour,
-    value: string | boolean
-  ) => {
-    setOpeningHours((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
-  // Apply Monday hours to all weekdays
-  const handleCopyMonHours = () => {
-    const mon = openingHours.find((h) => h.day === 'Monday') || {
-      open: '06:00 AM',
-      close: '10:00 PM',
-      isClosed: false,
-    };
-    setOpeningHours((prev) =>
-      prev.map((slot) => {
-        if (['Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(slot.day)) {
-          return { ...slot, open: mon.open, close: mon.close, isClosed: mon.isClosed };
-        }
-        return slot;
-      })
     );
   };
 
@@ -535,12 +545,27 @@ export function EditGymPage() {
 
           {/* Sub-section B: Pricing & Membership Tiers */}
           <div className="pt-2 border-t border-slate-100 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
                 <DollarSign className="h-3.5 w-3.5 text-slate-400" />
                 <span>Pricing Plans & Membership</span>
               </h3>
-              <span className="text-[11px] text-slate-400 font-medium">All amounts in INR (₹)</span>
+              {avgPrices && (
+                <div className="flex items-center space-x-2">
+                  <span className="text-[11px] text-teal-800 font-semibold hidden sm:inline bg-teal-50 px-2.5 py-0.5 rounded-lg border border-teal-200">
+                    {avgPrices.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleApplyAllAverages}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100/80 border border-teal-200 text-[#00A389] text-[10px] font-bold transition-all cursor-pointer shadow-2xs active:scale-95"
+                    title="Apply average prices for all plans"
+                  >
+                    <Sparkles className="h-3 w-3 text-[#00A389]" />
+                    <span>Apply All Averages</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -565,7 +590,19 @@ export function EditGymPage() {
                     className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">Single entry pass rate</p>
+                <div className="flex items-center justify-between pt-0.5">
+                  <p className="text-[10px] text-slate-400 font-medium">Single entry pass rate</p>
+                  {avgPrices && (
+                    <button
+                      type="button"
+                      onClick={() => setDayPassPrice(String(avgPrices.dayPass))}
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200 cursor-pointer"
+                    >
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Suggest: ₹{avgPrices.dayPass}</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* 1 Month */}
@@ -586,7 +623,19 @@ export function EditGymPage() {
                     className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">Monthly subscription</p>
+                <div className="flex items-center justify-between pt-0.5">
+                  <p className="text-[10px] text-slate-400 font-medium">Monthly subscription</p>
+                  {avgPrices && (
+                    <button
+                      type="button"
+                      onClick={() => setMonthlyPrice(String(avgPrices.monthly))}
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200 cursor-pointer"
+                    >
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Suggest: ₹{avgPrices.monthly}</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* 3 Months */}
@@ -607,24 +656,35 @@ export function EditGymPage() {
                     className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
                   />
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">Quarterly package</p>
+                <div className="flex items-center justify-between pt-0.5">
+                  <p className="text-[10px] text-slate-400 font-medium">Quarterly package</p>
+                  {avgPrices && (
+                    <button
+                      type="button"
+                      onClick={() => setThreeMonthPrice(String(avgPrices.threeMonth))}
+                      className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 hover:bg-teal-100 text-[#00A389] border border-teal-200 cursor-pointer"
+                    >
+                      <Sparkles className="h-2.5 w-2.5" />
+                      <span>Suggest: ₹{avgPrices.threeMonth}</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Sub-section C: About / Description */}
-          <div className="pt-2 border-t border-slate-100 space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-slate-400" />
-              <span>About Gym & Atmosphere</span>
-            </h3>
-
+          <div className="pt-2 border-t border-slate-100 space-y-1.5">
+            <label className="block text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+              <FileText className="h-4 w-4 text-[#00A389]" />
+              <span>Gym Description & About Us</span>
+            </label>
             <textarea
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Highlight equipment brands, qualified trainers, special workout zones, changing rooms, and member community..."
-              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389] transition-all resize-y leading-relaxed"
+              className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389] leading-relaxed transition-all resize-y"
             />
           </div>
 
@@ -665,69 +725,12 @@ export function EditGymPage() {
             </div>
           </div>
 
-          {/* Sub-section E: Operating Hours */}
-          <div className="pt-2 border-t border-slate-100 space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center space-x-1.5">
-                <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>Operating Hours Schedule</span>
-              </h3>
-              <button
-                type="button"
-                onClick={handleCopyMonHours}
-                className="text-xs font-bold text-[#00A389] hover:underline flex items-center space-x-1 cursor-pointer"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                <span>Apply Monday to all weekdays</span>
-              </button>
-            </div>
-
-            <div className="bg-slate-50/70 border border-slate-200/80 rounded-xl overflow-hidden divide-y divide-slate-100">
-              {openingHours.map((slot, idx) => (
-                <div
-                  key={slot.day}
-                  className="px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs"
-                >
-                  <span className="w-28 font-bold text-slate-800">{slot.day}</span>
-
-                  <div className="flex items-center space-x-3">
-                    <label className="inline-flex items-center space-x-1.5 text-slate-600 cursor-pointer mr-2 select-none">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(slot.isClosed)}
-                        onChange={(e) => handleHourChange(idx, 'isClosed', e.target.checked)}
-                        className="rounded border-slate-300 text-[#00A389] focus:ring-[#00A389]"
-                      />
-                      <span className="text-[11px] font-medium">Closed</span>
-                    </label>
-
-                    {!slot.isClosed ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={slot.open}
-                          onChange={(e) => handleHourChange(idx, 'open', e.target.value)}
-                          placeholder="06:00 AM"
-                          className="w-24 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 text-xs shadow-2xs focus:ring-1 focus:ring-[#00A389]"
-                        />
-                        <span className="text-slate-400 font-semibold">to</span>
-                        <input
-                          type="text"
-                          value={slot.close}
-                          onChange={(e) => handleHourChange(idx, 'close', e.target.value)}
-                          placeholder="10:00 PM"
-                          className="w-24 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-center font-bold text-slate-800 text-xs shadow-2xs focus:ring-1 focus:ring-[#00A389]"
-                        />
-                      </div>
-                    ) : (
-                      <span className="text-rose-600 font-semibold px-4 py-1.5 bg-rose-50 rounded-lg text-xs w-52 text-center">
-                        Closed for visitors
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+          {/* Sub-section E: Operating Hours & Multi-Slots */}
+          <div className="pt-2 border-t border-slate-100">
+            <OperatingScheduleManager
+              value={openingHours}
+              onChange={setOpeningHours}
+            />
           </div>
 
           {/* Sub-section F: Location GPS & Google Map Picker */}

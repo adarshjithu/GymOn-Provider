@@ -3,11 +3,7 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
-import { WelcomeBanner } from './components/dashboard/WelcomeBanner';
-import { StatCards } from './components/dashboard/StatCards';
-import { QuickActions } from './components/dashboard/QuickActions';
-import { RecentRequests } from './components/dashboard/RecentRequests';
-import { InfoBanner } from './components/dashboard/InfoBanner';
+import { DashboardPage } from './components/dashboard/DashboardPage';
 import { LoginPage } from './components/auth/LoginPage';
 import { LogoutModal } from './components/auth/LogoutModal';
 import { MyGymsPage } from './components/gyms/MyGymsPage';
@@ -18,10 +14,10 @@ import { CustomerLeadsPage } from './components/leads/CustomerLeadsPage';
 import { LeadDetailsPage } from './components/leads/LeadDetailsPage';
 import { ProfilePage } from './components/profile/ProfilePage';
 import { UsersAccessPage } from './components/users/UsersAccessPage';
-import { leadService } from './api/leadService';
 import { useAuth } from './context/AuthContext';
-import type { TabType, RequestLead } from './types';
-import { Dumbbell, Loader2 } from 'lucide-react';
+import type { TabType } from './types';
+import { Loader2 } from 'lucide-react';
+import { GymOnIcon } from './components/common/GymOnLogo';
 
 export default function App() {
   const { user, isAuthenticated, isLoading: isAuthLoading, logout } = useAuth();
@@ -54,36 +50,6 @@ export default function App() {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  // Dashboard state
-  const [oneEntryPrice, setOneEntryPrice] = useState(150);
-  const [isOpen, setIsOpen] = useState(true);
-  const [requests, setRequests] = useState<RequestLead[]>([]);
-  const [isRequestsLoading, setIsRequestsLoading] = useState(true);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      setIsRequestsLoading(true);
-      leadService
-        .getLeads({ limit: 3 })
-        .then((res) => {
-          const list = res.leads || [];
-          const formatted: RequestLead[] = list.slice(0, 3).map((lead) => ({
-            id: lead.id || lead._id || '',
-            name: lead.customerName,
-            date: lead.preferredDate || lead.updatedAt || 'Recent',
-            requestedTime: lead.preferredTime || '06:00 PM',
-          }));
-          setRequests(formatted);
-        })
-        .catch(() => {
-          setRequests([]);
-        })
-        .finally(() => {
-          setIsRequestsLoading(false);
-        });
-    }
-  }, [isAuthenticated]);
 
   const handleSelectTab = (tab: TabType) => {
     if (tab === 'Logout') {
@@ -120,12 +86,10 @@ export default function App() {
   if (isAuthLoading) {
     return (
       <div className="min-h-screen bg-[#060E1E] flex flex-col items-center justify-center space-y-4">
-        <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-[#00A389] to-[#00C49F] flex items-center justify-center shadow-lg shadow-[#00C49F]/20 animate-pulse">
-          <Dumbbell className="h-6 w-6 text-white stroke-[2.5]" />
-        </div>
+        <GymOnIcon className="h-14 w-14 animate-pulse" />
         <div className="flex items-center space-x-2 text-slate-400 text-xs font-medium">
-          <Loader2 className="h-4 w-4 animate-spin text-[#00C49F]" />
-          <span>Loading GYMON Portal...</span>
+          <Loader2 className="h-4 w-4 animate-spin text-[#00D7DE]" />
+          <span>Loading GymOn Portal...</span>
         </div>
       </div>
     );
@@ -193,26 +157,7 @@ export default function App() {
               {/* 1. Dashboard */}
               <Route
                 path="/dashboard"
-                element={
-                  <>
-                    <WelcomeBanner user={user} onNavigate={handleSelectTab} />
-
-                    <StatCards
-                      oneEntryPrice={oneEntryPrice}
-                      setOneEntryPrice={setOneEntryPrice}
-                      isOpen={isOpen}
-                      setIsOpen={setIsOpen}
-                      onNavigate={handleSelectTab}
-                    />
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      <QuickActions onNavigate={handleSelectTab} />
-                      <RecentRequests requests={requests} isLoading={isRequestsLoading} onNavigate={handleSelectTab} />
-                    </div>
-
-                    <InfoBanner />
-                  </>
-                }
+                element={<DashboardPage onNavigate={handleSelectTab} />}
               />
 
               {/* 2. My Gyms */}

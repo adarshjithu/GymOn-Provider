@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { GymItem } from '../../types';
 import { gymService } from '../../api/gymService';
+import { useAuth } from '../../context/AuthContext';
 import { GymDetailsSkeleton } from '../skeletons';
 
 interface GymDetailsPageProps {
@@ -27,6 +28,7 @@ interface GymDetailsPageProps {
 }
 
 export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetailsPageProps) {
+  const { user } = useAuth();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const currentSlug = slug || urlSlug || '';
@@ -65,6 +67,21 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
         setError(null);
         const data = await gymService.getGymBySlug(currentSlug);
         if (isMounted) {
+          if (
+            user?.role === 'sub_provider' &&
+            user?.hasAllGymsAccess === false &&
+            Array.isArray(user?.assignedGyms)
+          ) {
+            const allowedIds = new Set(
+              user.assignedGyms
+                .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+                .filter(Boolean)
+            );
+            if (!allowedIds.has(data._id || data.id)) {
+              setError('Access Denied: You do not have permission to view this gym.');
+              return;
+            }
+          }
           setGym(data);
         }
       } catch (err: any) {
@@ -82,7 +99,7 @@ export function GymDetailsPage({ slug, onBack, onEdit, onViewLeads }: GymDetails
     return () => {
       isMounted = false;
     };
-  }, [currentSlug]);
+  }, [currentSlug, user]);
 
   if (isLoading) {
     return <GymDetailsSkeleton />;

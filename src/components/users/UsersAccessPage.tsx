@@ -16,9 +16,11 @@ import {
   EyeOff,
   Shield,
   RefreshCw,
+  Building2,
 } from 'lucide-react';
-import type { SubProviderItem, CreateSubProviderPayload, SubProviderPermissions } from '../../types';
+import type { SubProviderItem, CreateSubProviderPayload, SubProviderPermissions, GymItem } from '../../types';
 import { subProviderService } from '../../api/subProviderService';
+import { gymService } from '../../api/gymService';
 import { useAuth } from '../../context/AuthContext';
 import { UsersAccessSkeleton, UsersAccessTableSkeleton } from '../skeletons';
 
@@ -34,6 +36,7 @@ export function UsersAccessPage() {
   const { user } = useAuth();
 
   const [subProviders, setSubProviders] = useState<SubProviderItem[]>([]);
+  const [gyms, setGyms] = useState<GymItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -53,6 +56,8 @@ export function UsersAccessPage() {
   const [addPassword, setAddPassword] = useState<string>('');
   const [showAddPass, setShowAddPass] = useState<boolean>(false);
   const [addPermissions, setAddPermissions] = useState<SubProviderPermissions>(DEFAULT_PERMISSIONS);
+  const [addHasAllGyms, setAddHasAllGyms] = useState<boolean>(true);
+  const [addSelectedGymIds, setAddSelectedGymIds] = useState<string[]>([]);
   const [isCreating, setIsCreating] = useState<boolean>(false);
 
   // Form States - Edit
@@ -60,6 +65,8 @@ export function UsersAccessPage() {
   const [editPhone, setEditPhone] = useState<string>('');
   const [editIsActive, setEditIsActive] = useState<boolean>(true);
   const [editPermissions, setEditPermissions] = useState<SubProviderPermissions>(DEFAULT_PERMISSIONS);
+  const [editHasAllGyms, setEditHasAllGyms] = useState<boolean>(true);
+  const [editSelectedGymIds, setEditSelectedGymIds] = useState<string[]>([]);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   // Form States - Password
@@ -74,8 +81,12 @@ export function UsersAccessPage() {
     try {
       setIsLoading(true);
       setErrorMsg(null);
-      const list = await subProviderService.getSubProviders();
+      const [list, gymsList] = await Promise.all([
+        subProviderService.getSubProviders(),
+        gymService.getProviderGyms(user?.id || user?._id).catch(() => [] as GymItem[]),
+      ]);
       setSubProviders(list);
+      setGyms(Array.isArray(gymsList) ? gymsList : []);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to fetch sub-providers.';
       setErrorMsg(msg);
@@ -87,7 +98,7 @@ export function UsersAccessPage() {
 
   useEffect(() => {
     fetchSubProviders();
-  }, []);
+  }, [user]);
 
   // Filtered sub-providers
   const filteredUsers = subProviders.filter((sub) => {
@@ -100,6 +111,18 @@ export function UsersAccessPage() {
     );
   });
 
+  // Open Add Modal
+  const handleOpenAdd = () => {
+    setAddName('');
+    setAddEmail('');
+    setAddPhone('');
+    setAddPassword('');
+    setAddPermissions(DEFAULT_PERMISSIONS);
+    setAddHasAllGyms(true);
+    setAddSelectedGymIds([]);
+    setIsAddModalOpen(true);
+  };
+
   // Open Edit Modal
   const handleOpenEdit = (sub: SubProviderItem) => {
     setSelectedSub(sub);
@@ -107,6 +130,13 @@ export function UsersAccessPage() {
     setEditPhone(sub.phone);
     setEditIsActive(sub.isActive);
     setEditPermissions(sub.permissions || DEFAULT_PERMISSIONS);
+    setEditHasAllGyms(sub.hasAllGymsAccess !== false);
+    const selectedIds = Array.isArray(sub.assignedGyms)
+      ? sub.assignedGyms
+          .map((g: any) => (typeof g === 'object' && g ? g._id || g.id : g))
+          .filter(Boolean)
+      : [];
+    setEditSelectedGymIds(selectedIds);
     setIsEditModalOpen(true);
   };
 
@@ -136,6 +166,10 @@ export function UsersAccessPage() {
       setErrorMsg('Password must be at least 6 characters.');
       return;
     }
+    if (!addHasAllGyms && addSelectedGymIds.length === 0) {
+      setErrorMsg('Please select at least one gym for this sub-provider, or choose "All Gyms".');
+      return;
+    }
 
     try {
       setIsCreating(true);
@@ -145,6 +179,8 @@ export function UsersAccessPage() {
         phone: addPhone.trim(),
         password: addPassword,
         permissions: addPermissions,
+        hasAllGymsAccess: addHasAllGyms,
+        assignedGyms: addHasAllGyms ? [] : addSelectedGymIds,
       };
 
       await subProviderService.createSubProvider(payload);
@@ -157,6 +193,8 @@ export function UsersAccessPage() {
       setAddPhone('');
       setAddPassword('');
       setAddPermissions(DEFAULT_PERMISSIONS);
+      setAddHasAllGyms(true);
+      setAddSelectedGymIds([]);
 
       await fetchSubProviders();
       setTimeout(() => setSuccessMsg(null), 4000);
@@ -174,6 +212,11 @@ export function UsersAccessPage() {
     if (!selectedSub) return;
     setErrorMsg(null);
 
+    if (!editHasAllGyms && editSelectedGymIds.length === 0) {
+      setErrorMsg('Please select at least one gym for this sub-provider, or choose "All Gyms".');
+      return;
+    }
+
     try {
       setIsUpdating(true);
       await subProviderService.updateSubProvider(selectedSub.id, {
@@ -181,6 +224,8 @@ export function UsersAccessPage() {
         phone: editPhone.trim(),
         isActive: editIsActive,
         permissions: editPermissions,
+        hasAllGymsAccess: editHasAllGyms,
+        assignedGyms: editHasAllGyms ? [] : editSelectedGymIds,
       });
 
       setSuccessMsg(`Sub-provider "${editName}" updated successfully!`);
@@ -271,7 +316,7 @@ export function UsersAccessPage() {
           type="button"
           onClick={() => {
             setErrorMsg(null);
-            setIsAddModalOpen(true);
+            handleOpenAdd();
           }}
           className="w-full md:w-auto px-5 py-2.5 bg-[#00A389] hover:bg-[#00917a] text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-[#00A389]/20 flex items-center justify-center space-x-2 cursor-pointer shrink-0"
         >
@@ -397,7 +442,7 @@ export function UsersAccessPage() {
             {!searchQuery && (
               <button
                 type="button"
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={handleOpenAdd}
                 className="px-4 py-2 bg-[#00A389] text-white text-xs font-bold rounded-xl hover:bg-[#00917a] transition-all cursor-pointer"
               >
                 Add First Sub-Provider
@@ -411,6 +456,7 @@ export function UsersAccessPage() {
                 <tr>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Sub-Provider</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Contact</th>
+                  <th className="px-3.5 sm:px-6 py-3 sm:py-4">Assigned Gyms</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Status</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4">Assigned Permissions</th>
                   <th className="px-3.5 sm:px-6 py-3 sm:py-4 text-right">Actions</th>
@@ -458,6 +504,49 @@ export function UsersAccessPage() {
                             <span>{sub.phone}</span>
                           </div>
                         </div>
+                      </td>
+
+                      {/* Assigned Gyms */}
+                      <td className="px-3.5 sm:px-6 py-3 sm:py-4">
+                        {sub.hasAllGymsAccess !== false ? (
+                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Building2 className="h-3 w-3 text-emerald-600 shrink-0" />
+                            <span>All Gyms (Full Access)</span>
+                          </span>
+                        ) : sub.assignedGyms && sub.assignedGyms.length > 0 ? (
+                          <div className="flex flex-wrap gap-1.5 max-w-xs">
+                            {sub.assignedGyms.slice(0, 2).map((gymItem: any, idx: number) => {
+                              const gymName =
+                                typeof gymItem === 'object' && gymItem?.gymName
+                                  ? gymItem.gymName
+                                  : gyms.find((g) => (g._id || g.id) === gymItem)?.gymName || 'Gym';
+                              return (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200/80 text-[#00A389] text-[10px] font-semibold"
+                                >
+                                  <Building2 className="h-2.5 w-2.5 shrink-0" />
+                                  <span className="truncate max-w-[120px]">{gymName}</span>
+                                </span>
+                              );
+                            })}
+                            {sub.assignedGyms.length > 2 && (
+                              <span
+                                title={sub.assignedGyms
+                                  .slice(2)
+                                  .map((g: any) => (typeof g === 'object' ? g.gymName : g))
+                                  .join(', ')}
+                                className="px-1.5 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold"
+                              >
+                                +{sub.assignedGyms.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            <span>No gyms assigned</span>
+                          </span>
+                        )}
                       </td>
 
                       {/* Status */}
@@ -650,6 +739,147 @@ export function UsersAccessPage() {
                 </div>
               </div>
 
+              {/* Gym Access & Assignment */}
+              <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-[#00A389]" />
+                    <span>Assign to Gym(s)</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    Control gym visibility
+                  </span>
+                </div>
+
+                {/* Radio Options: All Gyms vs Specific Gyms */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div
+                    onClick={() => setAddHasAllGyms(true)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start space-x-2.5 ${
+                      addHasAllGyms
+                        ? 'bg-teal-50/70 border-[#00A389] text-[#00A389] ring-1 ring-[#00A389]/30'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="addGymAccessMode"
+                      checked={addHasAllGyms}
+                      onChange={() => setAddHasAllGyms(true)}
+                      className="mt-0.5 text-[#00A389] focus:ring-[#00A389]"
+                    />
+                    <div>
+                      <span className="text-xs font-bold block text-slate-900">All Gyms</span>
+                      <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                        Can see and manage all current and future gyms
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setAddHasAllGyms(false)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start space-x-2.5 ${
+                      !addHasAllGyms
+                        ? 'bg-teal-50/70 border-[#00A389] text-[#00A389] ring-1 ring-[#00A389]/30'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="addGymAccessMode"
+                      checked={!addHasAllGyms}
+                      onChange={() => setAddHasAllGyms(false)}
+                      className="mt-0.5 text-[#00A389] focus:ring-[#00A389]"
+                    />
+                    <div>
+                      <span className="text-xs font-bold block text-slate-900">Particular Gym(s)</span>
+                      <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                        Restrict access to selected gym locations only
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Particular Gyms Checklist */}
+                {!addHasAllGyms && (
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/60 text-[11px]">
+                      <span className="font-semibold text-slate-700">
+                        Choose Gyms ({addSelectedGymIds.length} of {gyms.length} selected)
+                      </span>
+                      {gyms.length > 0 && (
+                        <div className="space-x-2 font-semibold">
+                          <button
+                            type="button"
+                            onClick={() => setAddSelectedGymIds(gyms.map((g) => g._id || g.id))}
+                            className="text-[#00A389] hover:underline cursor-pointer"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setAddSelectedGymIds([])}
+                            className="text-slate-500 hover:underline cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {gyms.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-2 italic text-center">
+                        No gyms registered yet under your account.
+                      </p>
+                    ) : (
+                      <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                        {gyms.map((gym) => {
+                          const gId = gym._id || gym.id;
+                          const isChecked = addSelectedGymIds.includes(gId);
+                          return (
+                            <label
+                              key={gId}
+                              className={`flex items-center space-x-2.5 p-2 rounded-lg cursor-pointer transition-colors ${
+                                isChecked
+                                  ? 'bg-teal-50/80 text-slate-900 border border-teal-200/80'
+                                  : 'hover:bg-slate-100 text-slate-700 border border-transparent'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setAddSelectedGymIds((prev) => [...prev, gId]);
+                                  } else {
+                                    setAddSelectedGymIds((prev) => prev.filter((id) => id !== gId));
+                                  }
+                                }}
+                                className="rounded border-slate-300 text-[#00A389] focus:ring-[#00A389]"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-xs font-semibold block truncate">
+                                  {gym.gymName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block truncate">
+                                  {gym.city || 'Bangalore'} • ₹{gym.dayPassPrice || 150} / day pass
+                                </span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {addSelectedGymIds.length === 0 && (
+                      <p className="text-[11px] text-amber-600 font-medium">
+                        ⚠️ Please select at least one gym, or select "All Gyms".
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Permissions Checkboxes */}
               <div className="pt-3 border-t border-slate-100 space-y-2.5">
                 <label className="block text-xs font-bold text-slate-800">
@@ -811,6 +1041,147 @@ export function UsersAccessPage() {
                     <option value="inactive">Inactive (Deactivated)</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Gym Access & Assignment (Assign to: All gym vs particular gyms) */}
+              <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                    <Building2 className="h-3.5 w-3.5 text-[#00A389]" />
+                    <span>Assign to Gym(s)</span>
+                  </label>
+                  <span className="text-[11px] text-slate-400 font-medium">
+                    Control gym visibility
+                  </span>
+                </div>
+
+                {/* Radio Options: All Gyms vs Particular Gym(s) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div
+                    onClick={() => setEditHasAllGyms(true)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start space-x-2.5 ${
+                      editHasAllGyms
+                        ? 'bg-teal-50/70 border-[#00A389] text-[#00A389] ring-1 ring-[#00A389]/30'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="editGymAccessMode"
+                      checked={editHasAllGyms}
+                      onChange={() => setEditHasAllGyms(true)}
+                      className="mt-0.5 text-[#00A389] focus:ring-[#00A389]"
+                    />
+                    <div>
+                      <span className="text-xs font-bold block text-slate-900">All Gyms</span>
+                      <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                        Can see and manage all current and future gyms
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    onClick={() => setEditHasAllGyms(false)}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start space-x-2.5 ${
+                      !editHasAllGyms
+                        ? 'bg-teal-50/70 border-[#00A389] text-[#00A389] ring-1 ring-[#00A389]/30'
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-700'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="editGymAccessMode"
+                      checked={!editHasAllGyms}
+                      onChange={() => setEditHasAllGyms(false)}
+                      className="mt-0.5 text-[#00A389] focus:ring-[#00A389]"
+                    />
+                    <div>
+                      <span className="text-xs font-bold block text-slate-900">Particular Gym(s)</span>
+                      <span className="text-[11px] text-slate-500 block leading-tight mt-0.5">
+                        Restrict access to selected gym locations only
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Particular Gyms Checklist */}
+                {!editHasAllGyms && (
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 space-y-2 animate-fadeIn">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-slate-200/60 text-[11px]">
+                      <span className="font-semibold text-slate-700">
+                        Choose Gyms ({editSelectedGymIds.length} of {gyms.length} selected)
+                      </span>
+                      {gyms.length > 0 && (
+                        <div className="space-x-2 font-semibold">
+                          <button
+                            type="button"
+                            onClick={() => setEditSelectedGymIds(gyms.map((g) => g._id || g.id))}
+                            className="text-[#00A389] hover:underline cursor-pointer"
+                          >
+                            Select All
+                          </button>
+                          <span className="text-slate-300">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditSelectedGymIds([])}
+                            className="text-slate-500 hover:underline cursor-pointer"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {gyms.length === 0 ? (
+                      <p className="text-xs text-slate-400 py-2 italic text-center">
+                        No gyms registered yet under your account.
+                      </p>
+                    ) : (
+                      <div className="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+                        {gyms.map((gym) => {
+                          const gId = gym._id || gym.id;
+                          const isChecked = editSelectedGymIds.includes(gId);
+                          return (
+                            <label
+                              key={gId}
+                              className={`flex items-center space-x-2.5 p-2 rounded-lg cursor-pointer transition-colors ${
+                                isChecked
+                                  ? 'bg-teal-50/80 text-slate-900 border border-teal-200/80'
+                                  : 'hover:bg-slate-100 text-slate-700 border border-transparent'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setEditSelectedGymIds((prev) => [...prev, gId]);
+                                  } else {
+                                    setEditSelectedGymIds((prev) => prev.filter((id) => id !== gId));
+                                  }
+                                }}
+                                className="rounded border-slate-300 text-[#00A389] focus:ring-[#00A389]"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <span className="text-xs font-semibold block truncate">
+                                  {gym.gymName}
+                                </span>
+                                <span className="text-[10px] text-slate-400 block truncate">
+                                  {gym.city || 'Bangalore'} • ₹{gym.dayPassPrice || 150} / day pass
+                                </span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {editSelectedGymIds.length === 0 && (
+                      <p className="text-[11px] text-amber-600 font-medium">
+                        ⚠️ Please select at least one gym, or select "All Gyms".
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Permissions Toggles */}

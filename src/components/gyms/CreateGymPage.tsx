@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Building2,
   Image as ImageIcon,
-  Save,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -14,7 +13,6 @@ import {
   Check,
   Clock,
   DollarSign,
-  Copy,
   Upload,
   ShieldCheck,
   MapPin,
@@ -26,6 +24,8 @@ import type { IOpeningHour, CreateGymPayload } from '../../types';
 import { gymService } from '../../api/gymService';
 import { useAuth } from '../../context/AuthContext';
 import { LocationPickerMap } from '../common/LocationPickerMap';
+import { OperatingScheduleManager } from '../common/OperatingScheduleManager';
+import { calculateNearbyAveragePrices } from '../../utils/geoUtils';
 
 const POPULAR_FACILITIES = [
   'Cardio Equipment',
@@ -52,6 +52,30 @@ const DEFAULT_DAYS = [
   'Sunday',
 ];
 
+const PHOTO_PRESETS = [
+  { name: 'Cardio Deck', url: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80' },
+  { name: 'Strength & Weights', url: 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80' },
+  { name: 'CrossFit Floor', url: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80' },
+  { name: 'Lockers & Spa', url: 'https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80' },
+];
+
+const interpolateGymDescription = (
+  template: string,
+  name: string,
+  addr: string,
+  cityName: string
+): string => {
+  if (!template) return '';
+  const gym = name.trim() || 'our fitness club';
+  const area = addr.trim() || 'your neighborhood';
+  const city = cityName.trim() || 'your city';
+
+  return template
+    .replace(/\{\{\s*gym_name\s*\}\}/gi, gym)
+    .replace(/\{\{\s*area\s*\}\}/gi, area)
+    .replace(/\{\{\s*city\s*\}\}/gi, city);
+};
+
 export function CreateGymPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -70,38 +94,20 @@ export function CreateGymPage() {
   const [monthlyPrice, setMonthlyPrice] = useState<string>('');
   const [threeMonthPrice, setThreeMonthPrice] = useState<string>('');
 
-  // Average Price Suggestions State
-  const [avgPrices, setAvgPrices] = useState<{
-    dayPass: number;
-    monthly: number;
-    threeMonth: number;
-    count: number;
-  } | null>(null);
+  const [latitude, setLatitude] = useState<string>('12.9716');
+  const [longitude, setLongitude] = useState<string>('77.5946');
+  const [platformGyms, setPlatformGyms] = useState<any[]>([]);
 
   useEffect(() => {
     let isMounted = true;
     gymService
-      .getProviderGyms()
+      .getAllPlatformGyms()
       .then((gyms) => {
         if (!isMounted || !Array.isArray(gyms) || gyms.length === 0) return;
-
-        const dayPasses = gyms.map((g) => Number(g.dayPassPrice)).filter((p) => !isNaN(p) && p > 0);
-        const monthlies = gyms.map((g) => Number(g.monthlyMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
-        const threeMonths = gyms.map((g) => Number(g.threeMonthMembershipPrice)).filter((p) => !isNaN(p) && p > 0);
-
-        const avgDP = dayPasses.length > 0 ? Math.round(dayPasses.reduce((a, b) => a + b, 0) / dayPasses.length) : 25;
-        const avgM = monthlies.length > 0 ? Math.round(monthlies.reduce((a, b) => a + b, 0) / monthlies.length) : 80;
-        const avgTM = threeMonths.length > 0 ? Math.round(threeMonths.reduce((a, b) => a + b, 0) / threeMonths.length) : 220;
-
-        setAvgPrices({
-          dayPass: avgDP,
-          monthly: avgM,
-          threeMonth: avgTM,
-          count: gyms.length,
-        });
+        setPlatformGyms(gyms);
       })
       .catch((err) => {
-        console.error('Failed to load existing gyms for price averages:', err);
+        console.error('Failed to load platform gyms for price averages:', err);
       });
 
     return () => {
@@ -109,15 +115,72 @@ export function CreateGymPage() {
     };
   }, []);
 
+  // Compute nearby 3km average prices dynamically whenever latitude/longitude or gyms change
+  const avgPrices = useMemo(() => {
+    return calculateNearbyAveragePrices(platformGyms, latitude, longitude, 3);
+  }, [platformGyms, latitude, longitude]);
+
   const handleApplyAllAverages = () => {
     if (!avgPrices) return;
     setDayPassPrice(String(avgPrices.dayPass));
     setMonthlyPrice(String(avgPrices.monthly));
     setThreeMonthPrice(String(avgPrices.threeMonth));
   };
-  const [latitude, setLatitude] = useState<string>('12.9716');
-  const [longitude, setLongitude] = useState<string>('77.5946');
+
+  // Gym Description & Template State
   const [description, setDescription] = useState<string>('');
+  const [rawTemplate, setRawTemplate] = useState<string>('');
+  const [templateId, setTemplateId] = useState<number | null>(null);
+  const [isDescriptionManuallyEdited, setIsDescriptionManuallyEdited] = useState<boolean>(false);
+  const [isLoadingTemplate, setIsLoadingTemplate] = useState<boolean>(false);
+
+  // Fetch an unused description template on mount
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoadingTemplate(true);
+    gymService
+      .getNextGymDescription()
+      .then((tpl) => {
+        if (!isMounted || !tpl) return;
+        setRawTemplate(tpl.description);
+        setTemplateId(tpl.templateId);
+        setDescription(interpolateGymDescription(tpl.description, gymName, address, city));
+      })
+      .catch((err) => {
+        console.warn('Failed to load initial gym description template:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingTemplate(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Dynamically interpolate template as user updates gym name, address, or city (if not manually edited)
+  useEffect(() => {
+    if (!isDescriptionManuallyEdited && rawTemplate) {
+      setDescription(interpolateGymDescription(rawTemplate, gymName, address, city));
+    }
+  }, [gymName, address, city, rawTemplate, isDescriptionManuallyEdited]);
+
+  const handleSuggestAnotherTemplate = async () => {
+    setIsLoadingTemplate(true);
+    try {
+      const nextTpl = await gymService.getNextGymDescription(templateId || undefined);
+      if (nextTpl) {
+        setRawTemplate(nextTpl.description);
+        setTemplateId(nextTpl.templateId);
+        setIsDescriptionManuallyEdited(false);
+        setDescription(interpolateGymDescription(nextTpl.description, gymName, address, city));
+      }
+    } catch (err) {
+      console.warn('Failed to suggest another template:', err);
+    } finally {
+      setIsLoadingTemplate(false);
+    }
+  };
   const [facilities, setFacilities] = useState<string[]>([
     'Air Conditioning',
     'Free Weights',
@@ -163,36 +226,6 @@ export function CreateGymPage() {
       setFacilities((prev) => [...prev, trimmed]);
     }
     setCustomFacility('');
-  };
-
-  // Hour Change
-  const handleHourChange = (
-    index: number,
-    field: keyof IOpeningHour,
-    value: string | boolean
-  ) => {
-    setOpeningHours((prev) => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
-  // Apply Monday hours to all weekdays
-  const handleCopyMonHours = () => {
-    const mon = openingHours.find((h) => h.day === 'Monday') || {
-      open: '06:00 AM',
-      close: '10:00 PM',
-      isClosed: false,
-    };
-    setOpeningHours((prev) =>
-      prev.map((slot) => {
-        if (['Tuesday', 'Wednesday', 'Thursday', 'Friday'].includes(slot.day)) {
-          return { ...slot, open: mon.open, close: mon.close, isClosed: mon.isClosed };
-        }
-        return slot;
-      })
-    );
   };
 
   // Handle S3 Direct File Upload
@@ -246,6 +279,15 @@ export function CreateGymPage() {
   // Remove Photo
   const handleRemovePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Toggle Photo Preset
+  const togglePhotoPreset = (url: string) => {
+    if (photos.includes(url)) {
+      setPhotos((prev) => prev.filter((p) => p !== url));
+    } else {
+      setPhotos((prev) => [...prev, url]);
+    }
   };
 
   // Make Cover
@@ -302,6 +344,7 @@ export function CreateGymPage() {
       status,
       dayPassPrice: dayPass,
       description: description.trim(),
+      descriptionTemplateId: templateId || undefined,
       facilities,
       openingHours,
       photos,
@@ -432,6 +475,17 @@ export function CreateGymPage() {
           </button>
         </div>
       )}
+
+      {/* Admin Verification Notice */}
+      <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex items-start space-x-3 text-xs text-amber-900 shadow-2xs">
+        <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+        <div className="space-y-0.5">
+          <p className="font-bold text-amber-900">Admin Verification Notice</p>
+          <p className="text-amber-800 leading-relaxed text-xs">
+            Newly submitted gyms are reviewed by GYMON Main Admin. Once approved, your gym will automatically go live to customers on the platform.
+          </p>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* ============================================================== */}
@@ -567,8 +621,8 @@ export function CreateGymPage() {
 
                 {avgPrices && (
                   <div className="flex items-center space-x-2">
-                    <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
-                      Based on avg of {avgPrices.count} gym{avgPrices.count > 1 ? 's' : ''}
+                    <span className="text-[11px] text-teal-800 font-semibold hidden sm:inline bg-teal-50/90 px-2.5 py-0.5 rounded-lg border border-teal-200/80">
+                      {avgPrices.label}
                     </span>
                     <button
                       type="button"
@@ -741,17 +795,35 @@ export function CreateGymPage() {
 
             {/* Description */}
             <div className="pt-2 border-t border-slate-100 space-y-1.5">
-              <label className="block text-xs font-bold text-slate-900 flex items-center space-x-1.5">
-                <FileText className="h-4 w-4 text-[#00A389]" />
-                <span>Gym Description & About Us</span>
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-900 flex items-center space-x-1.5">
+                  <FileText className="h-4 w-4 text-[#00A389]" />
+                  <span>Gym Description & About Us</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSuggestAnotherTemplate}
+                  disabled={isLoadingTemplate}
+                  className="inline-flex items-center space-x-1 text-[11px] font-semibold text-[#00A389] hover:text-[#008770] disabled:opacity-50 transition-colors px-2 py-0.5 rounded-md hover:bg-[#00A389]/10"
+                  title="Generate another unused description template"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${isLoadingTemplate ? 'animate-spin' : ''}`} />
+                  <span>{isLoadingTemplate ? 'Loading...' : 'Suggest Another Template'}</span>
+                </button>
+              </div>
               <textarea
                 rows={3}
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  setIsDescriptionManuallyEdited(true);
+                }}
                 placeholder="Highlight state-of-the-art machinery, specialized training zones, certified coaches, and member atmosphere..."
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389]"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00A389]/20 focus:border-[#00A389] leading-relaxed transition-all"
               />
+              <p className="text-[11px] text-slate-400">
+                ✨ Pre-filled with a unique gym template personalized to your name and city. You can freely edit or suggest another template.
+              </p>
             </div>
 
             {/* Facilities Chips */}
@@ -785,7 +857,7 @@ export function CreateGymPage() {
               </div>
 
               {/* Add Custom Facility */}
-              <div className="flex items-center space-x-2 pt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2">
                 <input
                   type="text"
                   value={customFacility}
@@ -797,89 +869,24 @@ export function CreateGymPage() {
                     }
                   }}
                   placeholder="Add custom facility (e.g. Olympic Lifting Platform)"
-                  className="max-w-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#00A389]"
+                  className="flex-1 sm:max-w-xs px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-[#00A389]"
                 />
                 <button
                   type="button"
                   onClick={handleAddCustomFacility}
-                  className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-colors cursor-pointer text-center"
                 >
                   Add Custom
                 </button>
               </div>
             </div>
 
-            {/* Operating Hours */}
-            <div className="pt-2 border-t border-slate-100 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-900 flex items-center space-x-1.5">
-                    <Clock className="h-4 w-4 text-[#00A389]" />
-                    <span>Operating Schedule</span>
-                  </label>
-                  <p className="text-[11px] text-slate-400">
-                    Define daily opening and closing hours for public display.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyMonHours}
-                  className="text-xs font-bold text-[#00A389] hover:text-[#008770] flex items-center space-x-1 cursor-pointer self-start sm:self-auto"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  <span>Copy Mon to Weekdays</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {openingHours.map((slot, idx) => (
-                  <div
-                    key={slot.day}
-                    className={`p-3 rounded-xl border transition-all ${
-                      slot.isClosed
-                        ? 'bg-slate-100/70 border-slate-200/60 opacity-75'
-                        : 'bg-white border-slate-200 shadow-2xs'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-slate-800">{slot.day}</span>
-                      <label className="flex items-center space-x-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={slot.isClosed}
-                          onChange={(e) => handleHourChange(idx, 'isClosed', e.target.checked)}
-                          className="rounded text-[#00A389] focus:ring-[#00A389] h-3.5 w-3.5 cursor-pointer"
-                        />
-                        <span className="text-[11px] font-semibold text-slate-500">Closed</span>
-                      </label>
-                    </div>
-
-                    {!slot.isClosed ? (
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={slot.open}
-                          onChange={(e) => handleHourChange(idx, 'open', e.target.value)}
-                          placeholder="06:00 AM"
-                          className="w-1/2 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-[11px] font-medium text-slate-800 text-center focus:outline-none focus:ring-1 focus:ring-[#00A389]"
-                        />
-                        <span className="text-slate-400 text-xs">to</span>
-                        <input
-                          type="text"
-                          value={slot.close}
-                          onChange={(e) => handleHourChange(idx, 'close', e.target.value)}
-                          placeholder="10:00 PM"
-                          className="w-1/2 px-2 py-1 bg-slate-50 border border-slate-200 rounded text-[11px] font-medium text-slate-800 text-center focus:outline-none focus:ring-1 focus:ring-[#00A389]"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-[11px] font-semibold text-slate-400 py-1 text-center bg-slate-200/50 rounded">
-                        Closed for maintenance / holiday
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+            {/* Operating Hours & Multi-Slots Schedule */}
+            <div className="pt-2 border-t border-slate-100">
+              <OperatingScheduleManager
+                value={openingHours}
+                onChange={setOpeningHours}
+              />
             </div>
           </div>
         </div>
@@ -913,6 +920,47 @@ export function CreateGymPage() {
           </div>
 
           <div className="p-4 sm:p-6 lg:p-8 space-y-5 sm:space-y-6">
+            {/* Quick Showcase Photo Presets */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-700">Quick Showcase Photo Presets</label>
+                <span className="text-[11px] text-slate-400">Click preset to add or remove from gallery</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {PHOTO_PRESETS.map((preset) => {
+                  const isSelected = photos.includes(preset.url);
+                  return (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => togglePhotoPreset(preset.url)}
+                      className={`relative rounded-xl overflow-hidden aspect-video border text-left group transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#00A389] ring-2 ring-[#00A389]/40 shadow-md'
+                          : 'border-slate-200 hover:border-slate-300 opacity-75 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={preset.url}
+                        alt={preset.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent flex flex-col justify-between p-2">
+                        <div className="flex justify-end">
+                          {isSelected && (
+                            <div className="h-4 w-4 rounded-full bg-[#00A389] text-white flex items-center justify-center shadow-xs">
+                              <Check className="h-2.5 w-2.5 stroke-[3]" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-bold text-white leading-tight drop-shadow-xs">{preset.name}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Direct S3 Upload Dropzone / Button */}
             <div className="p-6 border-2 border-dashed border-teal-200 rounded-2xl bg-teal-50/30 hover:bg-teal-50/60 transition-colors flex flex-col items-center justify-center text-center space-y-3">
               <input
@@ -1084,11 +1132,16 @@ export function CreateGymPage() {
               className="flex-1 sm:flex-initial px-6 sm:px-8 py-2.5 bg-gradient-to-r from-[#00A389] to-[#00C49F] hover:opacity-95 text-white text-xs font-bold rounded-xl shadow-md shadow-[#00A389]/20 transition-all flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>Submitting Gym for Approval...</span>
+                </>
               ) : (
-                <Save className="h-4 w-4" />
+                <>
+                  <Sparkles className="h-4 w-4 text-white" />
+                  <span>Submit Gym for Approval</span>
+                </>
               )}
-              <span>{isSubmitting ? 'Creating Gym...' : 'Register & Create Gym'}</span>
             </button>
           </div>
         </div>

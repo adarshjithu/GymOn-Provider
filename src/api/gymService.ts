@@ -1,6 +1,6 @@
 import { apiClient } from './baseUrl';
 import { errorHandler } from './errorHandler';
-import type { GymItem, UpdateGymPayload, CreateGymPayload } from '../types';
+import type { GymItem, UpdateGymPayload, CreateGymPayload, GymDescriptionTemplate } from '../types';
 
 export const gymService = {
   /**
@@ -23,6 +23,33 @@ export const gymService = {
       console.error('API Error in getProviderGyms:', msg);
       throw new Error(msg);
     }
+  },
+
+  /**
+   * Fetch all registered gyms across platform for accurate nearby price comparison
+   */
+  getAllPlatformGyms: async (): Promise<GymItem[]> => {
+    try {
+      const response = await apiClient.get('/customer/gyms', { params: { limit: 100 } });
+      const rawGyms = response.data?.data;
+      if (Array.isArray(rawGyms) && rawGyms.length > 0) {
+        return rawGyms.map((gym: any) => normalizeGym(gym));
+      }
+    } catch {
+      // Fallback to provider gyms if customer/gyms is not reachable
+    }
+
+    try {
+      const response = await apiClient.get('/provider/gyms');
+      const rawGyms = response.data?.data;
+      if (Array.isArray(rawGyms)) {
+        return rawGyms.map((gym: any) => normalizeGym(gym));
+      }
+    } catch (err) {
+      console.error('API Error in getAllPlatformGyms:', err);
+    }
+
+    return [];
   },
 
   /**
@@ -56,6 +83,24 @@ export const gymService = {
       const msg = errorHandler(error);
       console.error(`API Error in updateGym(${identifier}):`, msg);
       throw new Error(msg);
+    }
+  },
+
+  /**
+   * Get an unused gym description template from the database
+   */
+  getNextGymDescription: async (excludeId?: number): Promise<GymDescriptionTemplate | null> => {
+    try {
+      const response = await apiClient.get('/provider/gym-descriptions/next', {
+        params: excludeId ? { exclude: excludeId } : {},
+      });
+      if (response.data?.data) {
+        return response.data.data as GymDescriptionTemplate;
+      }
+      return null;
+    } catch (error) {
+      console.warn('Could not fetch gym description template:', error);
+      return null;
     }
   },
 

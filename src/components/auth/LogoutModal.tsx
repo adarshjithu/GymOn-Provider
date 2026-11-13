@@ -19,7 +19,7 @@ export function LogoutModal({ isOpen, isLoading, onConfirm, onCancel }: LogoutMo
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Sign Out</h3>
-            <p className="text-xs text-slate-400">GYMON Provider Portal</p>
+            <p className="text-xs text-slate-400">GymOn Provider Portal</p>
           </div>
         </div>
 

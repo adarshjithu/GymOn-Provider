@@ -88,9 +88,7 @@ export function Header({ activeTab, onToggleSidebar, user, onLogout, onNavigate 
               <div className="px-4 py-2.5 border-b border-slate-100">
                 <p className="text-xs font-bold text-slate-900">{displayName}</p>
                 <p className="text-[11px] text-slate-500 truncate">{user?.email || "provider@gymon.com"}</p>
-                <span className="inline-block mt-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                  Verified Provider
-                </span>
+                
               </div>
 
               <div className="py-1">
